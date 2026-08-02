@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — Lumora Admin{% endblock %}
+{% block content %}
+<section class="page-hero shell"><span class="eyebrow">ADMIN / CATALOGUE</span><h1>{{ page_title }} <em>beautifully.</em></h1></section>
+<section class="shell admin-form-wrap"><form class="admin-card product-admin-form" method="post" enctype="multipart/form-data">
+  <label>Product name<input name="name" required value="{{ request.form.get('name', product.name if product else '') }}"></label>
+  <label>Description<textarea name="description" rows="5" required>{{ request.form.get('description', product.description if product else '') }}</textarea></label>
+  <div class="form-grid"><label>Category<input name="category" required value="{{ request.form.get('category', product.category if product else '') }}"></label><label>Badge<input name="badge" value="{{ request.form.get('badge', product.badge if product else '') }}" placeholder="New / Trending"></label></div>
+  <div class="form-grid three"><label>Price (₹)<input type="number" min="0" step="0.01" name="price" required value="{{ request.form.get('price', product.price if product else '') }}"></label><label>Stock<input type="number" min="0" name="stock" required value="{{ request.form.get('stock', product.stock if product else '') }}"></label><label>Rating<input type="number" min="0" max="5" step="0.1" name="rating" value="{{ request.form.get('rating', product.rating if product else '4.5') }}"></label></div>
+  <label>Image URL (optional)<input type="url" name="image" value="{{ request.form.get('image', product.image if product else '') }}" placeholder="https://..."></label><label>Or upload product image<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp,image/gif"><small>JPG, PNG, WEBP or GIF.</small></label>
+  <div class="form-actions"><button class="btn primary" type="submit">Save product</button><a class="btn secondary" href="{{ url_for('main.admin_products') }}">Cancel</a></div>
+</form></section>
+{% endblock %}

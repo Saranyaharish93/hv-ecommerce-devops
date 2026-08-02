@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">PROFILE SETTINGS</span><h1>Make it <em>yours.</em></h1></section>
+<section class="auth-shell shell"><div class="auth-card profile-form-card">
+  <div><span class="eyebrow">PERSONAL DETAILS</span><h2>Edit profile</h2><p>Your email is used for sign-in and cannot be changed here.</p></div>
+  <form method="post" class="auth-form">
+    <label>Full name<input name="name" value="{{ user.name }}" required></label>
+    <label>Email<input value="{{ user.email }}" disabled></label>
+    <label>Phone number<input name="phone" value="{{ user.phone or '' }}" placeholder="+91 98765 43210"></label>
+    <label>Default delivery address<textarea name="address" rows="4" placeholder="House, street, city, state, PIN">{{ user.address or '' }}</textarea></label>
+    <div class="form-actions"><a class="btn secondary" href="{{ url_for('main.account') }}">Cancel</a><button class="btn primary" type="submit">Save changes</button></div>
+  </form>
+</div></section>
+{% endblock %}

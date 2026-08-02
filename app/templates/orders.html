@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}My Orders — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">ORDER HISTORY</span><h1>Every purchase, <em>in one place.</em></h1></section>
+<section class="shell orders-page">
+{% if orders %}<div class="purchase-list">
+{% for order in orders %}
+<article class="purchase-card">
+  <div class="purchase-card-head"><div><small>ORDER #{{ order.id[-8:]|upper }}</small><h3>{{ order.order_items|length }} item{{ '' if order.order_items|length == 1 else 's' }}</h3></div><span class="status {{ order.status|lower }}">{{ order.status }}</span></div>
+  <div class="purchase-products">
+    {% for item in order.order_items[:3] %}<div class="purchase-product">{% if item.image %}<img src="{{ item.image }}" alt="{{ item.name }}">{% else %}<div class="product-placeholder">L</div>{% endif %}<div><strong>{{ item.name }}</strong><span>Qty {{ item.quantity }} · ₹{{ '{:,.0f}'.format(item.subtotal) }}</span></div></div>{% endfor %}
+  </div>
+  <div class="purchase-card-foot"><div><small>PLACED</small><strong>{{ order.created_at.strftime('%d %b %Y') if order.created_at else '-' }}</strong></div><div><small>TOTAL</small><strong>₹{{ '{:,.0f}'.format(order.total) }}</strong></div><a class="btn secondary" href="{{ url_for('main.order_view', order_id=order.id) }}">View order →</a></div>
+</article>
+{% endfor %}</div>
+{% else %}<div class="empty-state"><h2>Your order history is waiting.</h2><p>Discover something thoughtful and it will appear here.</p><a class="btn primary" href="{{ url_for('main.shop') }}">Explore products</a></div>{% endif %}
+</section>
+{% endblock %}

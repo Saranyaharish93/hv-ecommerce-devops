@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Account — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">MY SPACE</span><h1>Hello, <em>{{ user.name }}.</em></h1></section>
+<section class="account-grid shell">
+  <div class="profile-card">
+    <div class="profile-avatar">{{ user.name[0]|upper }}</div><h2>{{ user.name }}</h2><p>{{ user.email }}</p>
+    <span class="role-pill">{{ user.role|title }}</span><div class="profile-actions"><a class="btn secondary" href="{{ url_for('main.edit_profile') }}">Edit profile</a><a class="btn primary" href="{{ url_for('main.logout') }}">Logout</a></div>
+  </div>
+  <div class="account-panel">
+    <div class="section-head small"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>Your latest orders</h2></div><a class="text-link" href="{{ url_for('main.orders') }}">View all</a></div>
+    {% if recent_orders %}<div class="order-list">
+      {% for order in recent_orders %}
+      <a class="order-row" href="{{ url_for('main.order_view', order_id=order.id) }}">
+        <div><small>ORDER</small><strong>#{{ order.id[-8:]|upper }}</strong></div>
+        <div><small>PRODUCTS</small><span>{{ order.order_items|length }} item{{ '' if order.order_items|length == 1 else 's' }}</span></div>
+        <div><small>STATUS</small><span class="status {{ order.status|lower }}">{{ order.status }}</span></div>
+        <div><small>TOTAL</small><strong>₹{{ '{:,.0f}'.format(order.total) }}</strong></div><b>→</b>
+      </a>{% endfor %}
+    </div>{% else %}<div class="empty-state"><h3>No orders yet</h3><p>Your completed purchases will appear here.</p><a class="btn primary" href="{{ url_for('main.shop') }}">Start shopping</a></div>{% endif %}
+  </div>
+</section>
+{% endblock %}

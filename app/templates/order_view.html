@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id[-8:]|upper }} — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">ORDER DETAILS</span><h1>#{{ order.id[-8:]|upper }} <em>{{ order.status|title }}</em></h1></section>
+<section class="order-detail shell">
+  <div class="order-main">
+    <div class="order-summary-head"><div><small>PLACED ON</small><strong>{{ order.created_at.strftime('%d %B %Y, %I:%M %p') if order.created_at else '-' }}</strong></div><span class="status {{ order.status|lower }}">{{ order.status }}</span></div>
+    {% if order.status != 'CANCELLED' %}<div class="timeline">
+      <div class="done"><b>1</b>Confirmed</div>
+      <div class="{{ 'done' if order.status in ['PACKED','SHIPPED','DELIVERED'] else 'active' if order.status == 'CONFIRMED' else '' }}"><b>2</b>Packed</div>
+      <div class="{{ 'done' if order.status in ['SHIPPED','DELIVERED'] else 'active' if order.status == 'PACKED' else '' }}"><b>3</b>Shipped</div>
+      <div class="{{ 'done' if order.status == 'DELIVERED' else 'active' if order.status == 'SHIPPED' else '' }}"><b>4</b>Delivered</div>
+    </div>{% else %}<div class="cancelled-banner">This order has been cancelled.</div>{% endif %}
+    <div class="section-head small"><div><span class="eyebrow">YOUR PRODUCTS</span><h2>Order items</h2></div></div>
+    <div class="detailed-items">
+      {% for item in order.order_items %}<article class="detailed-item">{% if item.image %}<img src="{{ item.image }}" alt="{{ item.name }}">{% else %}<div class="product-placeholder large">L</div>{% endif %}<div class="detailed-item-copy"><small>{{ item.category or 'Lumora collection' }}</small><h3>{{ item.name }}</h3><p>Quantity: {{ item.quantity }} · Unit price: ₹{{ '{:,.0f}'.format(item.price) }}</p></div><strong>₹{{ '{:,.0f}'.format(item.subtotal) }}</strong></article>{% endfor %}
+    </div>
+    <div class="order-actions">
+      <a class="btn secondary" href="{{ url_for('main.orders') }}">← All orders</a>
+      <a class="btn secondary" href="{{ url_for('main.download_invoice', order_id=order.id) }}">Download invoice ↓</a><form method="post" action="{{ url_for('main.buy_again', order_id=order.id) }}"><button class="btn primary" type="submit">Buy again</button></form>
+      {% if order.status in ['CONFIRMED','PACKED'] %}<form method="post" action="{{ url_for('main.cancel_order', order_id=order.id) }}" onsubmit="return confirm('Cancel this order?')"><button class="btn danger-btn" type="submit">Cancel order</button></form>{% endif %}
+    </div>
+  </div>
+  <aside class="order-side"><h3>Delivery details</h3><p><strong>{{ order.customer_name }}</strong><br>{{ order.email }}{% if order.phone %}<br>{{ order.phone }}{% endif %}<br>{{ order.address }}{% if order.city %}, {{ order.city }}{% endif %}{% if order.state %}<br>{{ order.state }}{% endif %}{% if order.postal_code %} - {{ order.postal_code }}{% endif %}</p>{% if order.estimated_delivery and order.status not in ['DELIVERED','CANCELLED'] %}<div class="delivery-estimate"><small>ESTIMATED DELIVERY</small><strong>{{ order.estimated_delivery.strftime('%d %B %Y') }}</strong></div>{% endif %}<hr><div><span>Items subtotal</span><strong>₹{{ '{:,.0f}'.format(order.total - order.shipping) }}</strong></div><div><span>Shipping</span><strong>{% if order.shipping == 0 %}Free{% else %}₹{{ '{:,.0f}'.format(order.shipping) }}{% endif %}</strong></div><div><span>Payment</span><strong>{{ order.payment_method or 'Not recorded' }}</strong></div><div><span>Payment status</span><strong>{{ order.payment_status or '-' }}</strong></div><div class="grand"><span>Order total</span><strong>₹{{ '{:,.0f}'.format(order.total) }}</strong></div>
+  {% if logged_in_role == 'admin' %}<form method="post" action="{{ url_for('main.update_order_status', order_id=order.id) }}"><label>Update status<select name="status">{% for value in ['CONFIRMED','PACKED','SHIPPED','DELIVERED','CANCELLED'] %}<option value="{{ value }}" {{ 'selected' if order.status == value }}>{{ value }}</option>{% endfor %}</select></label><button class="btn primary" type="submit">Save status</button></form>{% endif %}</aside>
+</section>
+{% endblock %}

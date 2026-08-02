@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LUMORA — Curated Future Goods{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<header class="site-header"><div class="shell nav-wrap">
+  <a class="brand" href="{{ url_for('main.home') }}"><span class="brand-mark">L</span><span>LUMORA</span></a>
+  <nav class="desktop-nav"><a href="{{ url_for('main.home') }}">Home</a><a href="{{ url_for('main.shop') }}">Shop</a><a href="{{ url_for('main.categories') }}">Collections</a><a href="{{ url_for('main.about') }}">Our Story</a><a href="{{ url_for('main.contact') }}">Contact</a></nav>
+  <div class="nav-actions"><a class="icon-link" href="{{ url_for('main.track_order') }}" title="Track order">⌁</a>{% if logged_in_user and logged_in_role != 'admin' %}<a class="wishlist-link" href="{{ url_for('main.wishlist') }}" title="Wishlist">♡ <span>{{ wishlist_count }}</span></a>{% endif %}{% if logged_in_user %}{% if logged_in_role == 'admin' %}<a class="account-link admin-link" href="{{ url_for('main.admin_dashboard') }}">Dashboard</a>{% else %}<a class="account-link" href="{{ url_for('main.account') }}">Hi, {{ logged_in_user.split(' ')[0] }}</a>{% endif %}{% else %}<a class="account-link" href="{{ url_for('main.login') }}">Login</a>{% endif %}<a class="bag-link" href="{{ url_for('main.cart') }}">Bag <span>{{ cart_count }}</span></a><button class="menu-btn" id="menuBtn">☰</button></div>
+</div><nav class="mobile-nav" id="mobileNav"><a href="/">Home</a><a href="/shop">Shop</a><a href="/categories">Collections</a><a href="/about">Our Story</a><a href="/track-order">Track order</a>{% if logged_in_user and logged_in_role != 'admin' %}<a href="{{ url_for('main.wishlist') }}">Wishlist ({{ wishlist_count }})</a>{% endif %}{% if logged_in_user %}<a href="{{ url_for('main.admin_dashboard') if logged_in_role == 'admin' else url_for('main.account') }}">My area</a><a href="/logout">Logout</a>{% else %}<a href="/login">Login</a><a href="/register">Register</a>{% endif %}</nav></header>
+<main>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="toast-message {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+{% block content %}{% endblock %}
+</main>
+<footer class="footer"><div class="shell footer-grid"><div><a class="brand light" href="/"><span class="brand-mark">L</span><span>LUMORA</span></a><p>Thoughtful objects for brighter everyday living.</p></div><div><h4>Explore</h4><a href="/shop">All products</a><a href="/categories">Collections</a><a href="/track-order">Track order</a></div><div><h4>Company</h4><a href="/about">Our story</a><a href="/contact">Contact</a><a href="/health">System health</a></div><div><h4>Stay inspired</h4><p>Design notes, product drops and calm ideas.</p><form class="newsletter"><input type="email" placeholder="Email address"><button type="button">→</button></form></div></div><div class="shell copyright">© {{ current_year }} Lumora. Built with Flask, MongoDB, Docker & Kubernetes.</div></footer>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

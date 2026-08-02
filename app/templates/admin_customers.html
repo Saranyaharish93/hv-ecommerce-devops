@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Customers — Lumora Admin{% endblock %}
+{% block content %}
+<section class="admin-hero"><div class="shell"><span class="eyebrow">COMMUNITY</span><h1>Customer <em>management.</em></h1><p>Review customer activity, order history and account access.</p></div></section>
+<section class="shell admin-page">
+  <div class="admin-toolbar"><form class="admin-search" method="get"><input name="q" value="{{ search }}" placeholder="Search name, email or phone"><button class="btn secondary">Search</button></form></div>
+  <div class="admin-card table-scroll"><table class="data-table"><thead><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total spent</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+  {% for customer in customers %}<tr><td><strong>{{ customer.name }}</strong><small>{{ customer.email }}</small></td><td>{{ customer.phone or '—' }}</td><td>{{ customer.order_count }}</td><td>₹{{ '%.0f'|format(customer.spent) }}</td><td><span class="status {{ 'delivered' if customer.is_active is not false else 'cancelled' }}">{{ 'ACTIVE' if customer.is_active is not false else 'INACTIVE' }}</span></td><td><div class="table-actions"><a href="{{ url_for('main.admin_customer_view', customer_id=customer.id) }}">View</a><form method="post" action="{{ url_for('main.admin_customer_toggle', customer_id=customer.id) }}"><button type="submit">{{ 'Deactivate' if customer.is_active is not false else 'Activate' }}</button></form></div></td></tr>
+  {% else %}<tr><td colspan="6">No matching customers.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endblock %}

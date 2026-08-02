@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Secure Checkout — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">SECURE CHECKOUT</span><h1>Almost <em>yours.</em></h1></section>
+<section class="checkout-page shell">
+  <form class="checkout-form-card" method="post" action="{{ url_for('main.checkout') }}">
+    <div class="checkout-step"><span>01</span><div><small>DELIVERY</small><h2>Where should we send it?</h2></div></div>
+    <div class="form-grid">
+      <label>Full name<input name="customer_name" value="{{ request.form.get('customer_name', user.name if user else '') }}" required></label>
+      <label>Email<input type="email" name="email" value="{{ request.form.get('email', user.email if user else '') }}" required></label>
+      <label>Phone<input name="phone" value="{{ request.form.get('phone', user.phone if user else '') }}" required></label>
+      <label>Postal code<input name="postal_code" value="{{ request.form.get('postal_code', user.postal_code if user else '') }}" required></label>
+    </div>
+    <label>Street address<textarea name="address" rows="3" required>{{ request.form.get('address', user.address if user else '') }}</textarea></label>
+    <div class="form-grid">
+      <label>City<input name="city" value="{{ request.form.get('city', user.city if user else '') }}" required></label>
+      <label>State<input name="state" value="{{ request.form.get('state', user.state if user else '') }}" required></label>
+    </div>
+    <div class="checkout-step second"><span>02</span><div><small>PAYMENT</small><h2>Choose a payment method</h2></div></div>
+    <div class="payment-options">
+      <label><input type="radio" name="payment_method" value="COD" checked><span><b>Cash on delivery</b><small>Pay when your order arrives</small></span></label>
+      <label><input type="radio" name="payment_method" value="UPI"><span><b>UPI demo payment</b><small>Simulated successful payment</small></span></label>
+      <label><input type="radio" name="payment_method" value="CARD"><span><b>Card demo payment</b><small>No real card information required</small></span></label>
+    </div>
+    <button class="btn primary wide" type="submit">Place order · ₹{{ '{:,.0f}'.format(grand_total) }} ↗</button>
+    <p class="secure-note">🔒 Demo checkout only. No real payment is processed.</p>
+  </form>
+  <aside class="checkout-review">
+    <span class="eyebrow">YOUR ORDER</span>
+    <h2>{{ items|length }} product{{ '' if items|length == 1 else 's' }}</h2>
+    <div class="review-items">{% for item in items %}<div><img src="{{ item.image }}" alt="{{ item.name }}"><span><b>{{ item.name }}</b><small>Qty {{ item.quantity }}</small></span><strong>₹{{ '{:,.0f}'.format(item.subtotal) }}</strong></div>{% endfor %}</div>
+    <div class="review-totals"><div><span>Subtotal</span><strong>₹{{ '{:,.0f}'.format(subtotal) }}</strong></div><div><span>Delivery</span><strong>{{ 'Free' if shipping == 0 else '₹' ~ shipping }}</strong></div><div class="grand"><span>Total</span><strong>₹{{ '{:,.0f}'.format(grand_total) }}</strong></div></div>
+  </aside>
+</section>
+{% endblock %}

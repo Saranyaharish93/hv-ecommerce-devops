@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Customer Details — Lumora Admin{% endblock %}
+{% block content %}
+<section class="page-hero shell"><span class="eyebrow">CUSTOMER PROFILE</span><h1>{{ customer.name }} <em>at a glance.</em></h1></section>
+<section class="shell customer-admin-grid">
+  <aside class="admin-card customer-summary"><div class="profile-avatar">{{ customer.name[0]|upper }}</div><h2>{{ customer.name }}</h2><p>{{ customer.email }}</p><p>{{ customer.phone or 'No phone added' }}</p><p>{{ customer.address or 'No address added' }}</p><span class="status {{ 'delivered' if customer.is_active is not false else 'cancelled' }}">{{ 'ACTIVE' if customer.is_active is not false else 'INACTIVE' }}</span><form method="post" action="{{ url_for('main.admin_customer_toggle', customer_id=customer_id) }}"><button class="btn secondary" type="submit">{{ 'Deactivate account' if customer.is_active is not false else 'Activate account' }}</button></form></aside>
+  <div class="admin-card"><div class="section-head small"><div><span class="eyebrow">PURCHASE HISTORY</span><h2>{{ orders|length }} order{{ '' if orders|length == 1 else 's' }}</h2></div></div><div class="order-list">{% for order in orders %}<a class="order-row" href="{{ url_for('main.order_view', order_id=order.id) }}"><div><small>ORDER</small><strong>#{{ order.id[-8:]|upper }}</strong></div><div><small>DATE</small><span>{{ order.created_at.strftime('%d %b %Y') if order.created_at else '—' }}</span></div><span class="status {{ order.status|lower }}">{{ order.status }}</span><strong>₹{{ '%.0f'|format(order.total) }}</strong></a>{% else %}<p>This customer has not placed an order yet.</p>{% endfor %}</div></div>
+</section>
+{% endblock %}

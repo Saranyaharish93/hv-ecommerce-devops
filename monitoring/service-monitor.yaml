@@ -1,0 +1,14 @@
+# Optional when Prometheus Operator is installed.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hv-ecommerce
+  namespace: hv-ecommerce
+spec:
+  selector:
+    matchLabels:
+      app: hv-ecommerce
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

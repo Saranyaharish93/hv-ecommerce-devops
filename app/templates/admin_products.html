@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Products — Lumora Admin{% endblock %}
+{% block content %}
+<section class="admin-hero"><div class="shell"><span class="eyebrow">CATALOGUE</span><h1>Product <em>management.</em></h1><p>Add, update and remove products from one place.</p></div></section>
+<section class="shell admin-page">
+  <div class="admin-toolbar">
+    <form class="admin-search" method="get"><input name="q" value="{{ search }}" placeholder="Search product or category"><button class="btn secondary">Search</button></form>
+    <a class="btn primary" href="{{ url_for('main.admin_product_new') }}">＋ Add product</a>
+  </div>
+  <div class="admin-card table-scroll">
+    <table class="data-table">
+      <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Rating</th><th>Actions</th></tr></thead>
+      <tbody>{% for product in products %}<tr>
+        <td><div class="table-product">{% if product.image %}<img src="{{ product.image }}" alt="">{% else %}<span class="mini-placeholder">L</span>{% endif %}<div><strong>{{ product.name }}</strong><small>{{ product.badge or 'Standard' }}</small></div></div></td>
+        <td>{{ product.category }}</td><td>₹{{ '%.0f'|format(product.price) }}</td><td><span class="stock-pill {{ 'low' if product.stock <= 10 else '' }}">{{ product.stock }}</span></td><td>★ {{ product.rating }}</td>
+        <td><div class="table-actions"><a href="{{ url_for('main.admin_product_edit', product_id=product.id) }}">Edit</a><form method="post" action="{{ url_for('main.admin_product_delete', product_id=product.id) }}" onsubmit="return confirm('Delete this product?')"><button type="submit">Delete</button></form></div></td>
+      </tr>{% else %}<tr><td colspan="6">No matching products.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

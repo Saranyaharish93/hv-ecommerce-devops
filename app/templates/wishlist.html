@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Your Wishlist — Lumora{% endblock %}
+{% block content %}
+<section class="page-hero compact shell"><span class="eyebrow">SAVED FOR LATER</span><h1>Your wishlist <em>({{ products|length }})</em></h1></section>
+<section class="shell wishlist-page">
+{% if products %}
+  <div class="wishlist-grid">
+  {% for product in products %}<article class="wishlist-card"><a href="{{ url_for('main.product_detail', product_id=product.id) }}"><img src="{{ product.image }}" alt="{{ product.name }}"></a><div><small>{{ product.category }}</small><h3>{{ product.name }}</h3><p>{{ product.description }}</p><strong>₹{{ '{:,.0f}'.format(product.price) }}</strong><div class="wishlist-actions"><form method="post" action="{{ url_for('main.wishlist_to_cart', product_id=product.id) }}"><button class="btn primary">Move to bag</button></form><form method="post" action="{{ url_for('main.toggle_wishlist', product_id=product.id) }}"><button class="btn secondary">Remove</button></form></div></div></article>{% endfor %}
+  </div>
+{% else %}<div class="empty-state full"><h2>No saved favourites yet.</h2><p>Tap the heart on any product to keep it here.</p><a class="btn primary" href="{{ url_for('main.shop') }}">Explore products</a></div>{% endif %}
+</section>
+{% endblock %}
