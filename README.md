@@ -2,9 +2,93 @@
 
 Lumora is a full-stack e-commerce web application developed using **Python Flask and MongoDB**.
 
-This repository currently contains the **application source code and Docker configuration**. The application will be used as the base application for an **End-to-End DevOps Capstone Project**, where CI/CD, Kubernetes, cloud infrastructure, security scanning, and monitoring will be implemented in later stages.
+This repository serves as the base application for an **End-to-End DevOps Capstone Project**, demonstrating CI/CD automation, cloud infrastructure provisioning, container orchestration with Kubernetes on AWS, security scanning, and full-stack observability.
 
+---
 
+# 🏗️ Production Architecture & GitOps CI/CD Pipeline
+
+*Direct Artifact Reference: [`project_artifacts/architecture_diagram.png`](project_artifacts/architecture_diagram.png)*
+
+![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/architecture_diagram.png)
+
+### 📐 Architecture & Infrastructure Overview
+
+The Lumora DevOps platform implements an enterprise-grade, resilient, multi-AZ cloud architecture on **Amazon Web Services (AWS)** using **GitOps**, **Infrastructure as Code (IaC)**, and **automated CI/CD pipelines**.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 LUMORA DEVOPS CLOUD ARCHITECTURE                                 │
+├───────────────────────────────┬──────────────────────────────────┬───────────────────────────────┤
+│ 1. Source Control & GitOps    │ 2. CI/CD & Security (Jenkins)    │ 3. Artifacts & Remote State   │
+│    • GitHub Feature Branches  │    • Pytest Unit Testing         │    • AWS ECR (Container Reg.) │
+│    • Pull Requests & Webhooks │    • Trivy Vulnerability Scan    │    • AWS S3 (Terraform State) │
+│    • Main Branch Integration  │    • Multi-stage Docker Build    │    • DynamoDB (State Locking) │
+├───────────────────────────────┼──────────────────────────────────┼───────────────────────────────┤
+│ 4. AWS VPC (Multi-AZ Network) │ 5. Container Workloads (EKS)     │ 6. Observability & Operations │
+│    • Dual-AZ Public Subnets   │    • Flask Deployment (Gunicorn) │    • Prometheus Server        │
+│    • Dual-AZ Private Subnets  │    • Horizontal Pod Auto (HPA)   │    • Grafana KPI Dashboards   │
+│    • AWS ALB + NAT Gateways   │    • MongoDB StatefulSet + EBS   │    • Alertmanager + Slack     │
+└───────────────────────────────┴──────────────────────────────────┴───────────────────────────────┘
+```
+
+#### 1. 🐙 Source Control & Collaboration
+- **Developer Workflow**: Developers work on feature branches and submit Pull Requests to the `main` branch on GitHub.
+- **Automated Triggers**: GitHub Webhooks trigger the Jenkins declarative pipeline on every push or merged PR.
+
+#### 2. ⚙️ Automation, CI & Security (Jenkins on AWS EC2)
+- **Controller Host**: Jenkins runs on an AWS EC2 instance in a dedicated management security group, fully configured and hardened using **Ansible playbooks** (automating Docker Engine, `kubectl`, AWS CLI, and security tools).
+- **Declarative Pipeline Stages**:
+  1. `Checkout`: Pulls the latest code repository from GitHub.
+  2. `Pytest`: Runs automated unit and functional test suites under `tests/`.
+  3. `Trivy Scan`: Scans application files and container dependencies for security vulnerabilities.
+  4. `Docker BuildKit`: Builds optimized, secure container images with non-root user (`appuser`).
+  5. `Push Image`: Tags images with build numbers and pushes to **Amazon ECR**.
+  6. `Terraform Plan/Apply`: Provisions and manages AWS VPC, subnets, and EKS resources with remote state locking.
+  7. `Ansible`: Manages host configurations idempotently.
+  8. `Deploy to EKS`: Applies rolling updates to Kubernetes workloads using `kubectl`.
+
+#### 3. 📦 Artifacts & IaC State Management
+- **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-flask`).
+- **Amazon S3 & DynamoDB**: Provides secure remote state storage and state locking for Terraform to enable seamless team collaboration.
+
+#### 4. 🌐 AWS Production Network (VPC `10.0.0.0/16`)
+- **Multi-AZ Resilience**: Network resources are distributed across **Availability Zone A** and **Availability Zone B**.
+- **Public Subnets (`10.0.1.0/24`, `10.0.2.0/24`)**:
+  - **Internet Gateway (IGW)** for external inbound/outbound connectivity.
+  - **Dual-AZ NAT Gateways** providing secure outbound internet access for private workloads.
+  - **AWS Application Load Balancer (ALB)** handling TLS/HTTPS termination on port `443`.
+  - **Jenkins EC2 / Bastion Host**.
+- **Private Subnets (`10.0.11.0/24`, `10.0.12.0/24`)**:
+  - Isolated from direct public internet exposure.
+  - Hosts **EKS Managed Node Groups** and all application/database pods.
+
+#### 5. ☸️ Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
+- **ALB Ingress Controller**: Routes incoming external traffic to the internal `lumora-app-service` (ClusterIP: `5000`).
+- **Flask Application Deployment**:
+  - Multi-replica Python 3.12 Flask app running behind **Gunicorn**.
+  - Configured with `readinessProbe` and `livenessProbe` monitoring `/health`.
+  - Scaled dynamically (2 to 10 replicas) using the **Horizontal Pod Autoscaler (HPA)** based on CPU/memory utilization.
+  - Environment configuration managed via Kubernetes `ConfigMap` and secrets via `Kubernetes Secrets`.
+- **Database Workload (MongoDB 7.0)**:
+  - Deployed as a dedicated `MongoDB StatefulSet` in the private subnet.
+  - Internal communication via `mongo-service` (ClusterIP: `27017`) — completely isolated from public access.
+  - Data persistence guaranteed using **PersistentVolumeClaim (PVC)** bound to high-performance **Amazon EBS `gp3` volumes** via the **AWS EBS CSI Driver**.
+
+#### 6. 📊 Observability, Alerting & Operations
+- **Prometheus**: Time Series Database scraping metrics on a 15-second interval from:
+  - `Flask App (/metrics)` & `Flask App (/health)`
+  - `node-exporter (/metrics)` on EC2 worker nodes
+  - `kube-state-metrics (/metrics)` for pod, deployment, and cluster health
+- **Grafana**: Visualizes real-time performance dashboards:
+  - **Application KPI Dashboard**: HTTP request rate, response latency, order transactions, error rates.
+  - **Infrastructure Dashboard**: Node CPU/RAM utilization, pod restart counts, disk I/O.
+- **Alertmanager & Incident Management**:
+  - Triggers operational alerts on latency thresholds, pod crash loops, and resource exhaustion.
+  - Routes notifications to **Slack**, **Email**, and **PagerDuty**.
+  - Integrates Jenkins pipeline build failure notifications.
+
+---
 
 ## 🚀 Technology Stack
 
@@ -664,7 +748,7 @@ The current Flask + MongoDB application will be used for the upcoming end-to-end
 
 ## Phase 8 — Final Capstone
 
-- [ ] Architecture diagram
+- [x] Architecture diagram
 - [ ] CI/CD architecture
 - [ ] Deployment screenshots
 - [ ] Monitoring screenshots
@@ -672,50 +756,6 @@ The current Flask + MongoDB application will be used for the upcoming end-to-end
 - [ ] Project documentation
 - [ ] Final presentation
 - [ ] Viva preparation
-
-
-
-# 🏗️ Planned End-to-End Architecture
-
-text
-Developer
-    |
-    ↓
-GitHub
-    |
-    ↓
-Jenkins CI/CD
-    |
-    ├── Unit Tests
-    ├── Security Scan
-    ├── Docker Build
-    └── Docker Image Push
-            |
-            ↓
-       Container Registry
-            |
-            ↓
-        AWS EKS
-            |
-     ┌──────┴──────┐
-     ↓             ↓
-Flask Pods      MongoDB
-     |
-     ↓
-Kubernetes Service / Ingress
-     |
-     ↓
-Users
-
-Monitoring
-     |
-     ├── Prometheus
-     └── Grafana
-
-Infrastructure
-     |
-     ├── Terraform
-     └── Ansible
 
 
 
