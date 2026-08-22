@@ -1,0 +1,133 @@
+Sprint 1: Architecture, Docker & VPC Setup
+
+#1: [Sprint 1] Design application and DevOps architecture
+
+#2: [Sprint 1] Validate application Dockerization
+
+#3: [Sprint 1] Create AWS ECR repository
+
+#7: [Sprint 1] Create Terraform project structure
+
+#8: [Sprint 1] Provision AWS VPC using Terraform
+
+#9: [Sprint 1] Create public and private subnets
+
+#10: [Sprint 1] Configure Internet Gateway and Route Tables
+
+#11: [Sprint 1] Configure Security Groups
+
+Sprint 2: Terraform & AWS Infrastructure
+
+#4: [Sprint 2] Provision Jenkins EC2 server
+
+#5: [Sprint 2] Configure Jenkins plugins and AWS credentials
+
+#6: [Sprint 2] Integrate the GitHub repository with Jenkins
+
+#12: [Sprint 2] Provision AWS EKS cluster
+
+#13: [Sprint 2] Provision EKS managed node group
+
+#14: [Sprint 2] Configure Terraform remote state in S3
+
+#15: [Sprint 2] Integrate Terraform execution with Jenkins
+
+Sprint 3: Ansible Configuration Management
+
+#16: [Sprint 3] Create Ansible inventory
+
+#17: [Sprint 3] Create common configuration role
+
+#18: [Sprint 3] Install Docker using Ansible
+
+#19: [Sprint 3] Install kubectl using Ansible
+
+#20: [Sprint 3] Install AWS CLI using Ansible
+
+#21: [Sprint 3] Configure Jenkins server using Ansible
+
+#22: [Sprint 3] Integrate Ansible stage into Jenkins
+
+#23: [Sprint 3] Validate Ansible idempotency
+
+Sprint 4: Jenkins CI/CD & Kubernetes EKS
+
+#24: [Sprint 4] Create Jenkins declarative pipeline
+
+#25: [Sprint 4] Add application test stage
+
+#26: [Sprint 4] Add Docker build stage
+
+#27: [Sprint 4] Add Trivy security scanning
+
+#28: [Sprint 4] Push Docker image to AWS ECR
+
+#29: [Sprint 4] Create Kubernetes namespace
+
+#30: [Sprint 4] Create Flask Deployment
+
+#31: [Sprint 4] Create Kubernetes Service
+
+#32: [Sprint 4] Configure MongoDB workload
+
+#33: [Sprint 4] Configure ConfigMap and Secrets
+
+#34: [Sprint 4] Configure liveness and readiness probes
+
+#35: [Sprint 4] Configure Horizontal Pod Autoscaler
+
+#36: [Sprint 4] Configure AWS Load Balancer / Ingress
+
+#37: [Sprint 4] Add Kubernetes deploy stage to Jenkins
+
+#38: [Sprint 4] Verify end-to-end GitHub → Jenkins → EKS deployment
+
+Sprint 5: Prometheus, Grafana & Alerts
+
+#39: [Sprint 5] Install Prometheus on EKS
+
+#40: [Sprint 5] Configure application metrics collection
+
+#41: [Sprint 5] Configure Kubernetes node metrics
+
+#42: [Sprint 5] Install Grafana
+
+#43: [Sprint 5] Build application Grafana dashboard
+
+#44: [Sprint 5] Build Kubernetes infrastructure dashboard
+
+#45: [Sprint 5] Configure Prometheus alerts
+
+#46: [Sprint 5] Configure deployment failure notifications
+
+#47: [Sprint 5] Test monitoring and alerting
+
+Sprint 6: Testing, Documentation & Final Demo
+
+#48: [Sprint 6] Execute application functional tests
+
+#49: [Sprint 6] Execute Docker validation
+
+#50: [Sprint 6] Execute Terraform validation
+
+#51: [Sprint 6] Execute Ansible validation
+
+#52: [Sprint 6] Execute Kubernetes deployment tests
+
+#53: [Sprint 6] Execute CI/CD end-to-end test
+
+#54: [Sprint 6] Execute monitoring and alert tests
+
+#55: [Sprint 6] AWS Cost Optimization Review
+
+#56: [Sprint 6] Complete README documentation
+
+#57: [Sprint 6] Create architecture diagram
+
+#58: [Sprint 6] Create CI/CD pipeline diagram
+
+#59: [Sprint 6] Collect project screenshots
+
+#60: [Sprint 6] Prepare final presentation
+
+#61: [Sprint 6] Prepare viva questions and answers
