@@ -2,6 +2,15 @@ terraform {
   # Minimum Terraform version
   required_version = ">= 1.6.0, < 2.0.0"
 
+  # Native S3 Remote State Backend (No DynamoDB required!)
+  backend "s3" {
+    bucket       = "lumora-ecommerce-prod-tfstate-us-east-1"
+    key          = "prod/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true # Enables Native S3 State Locking!
+  }
+
   required_providers {
     # AWS Provider (Latest v5 series)
     aws = {

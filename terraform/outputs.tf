@@ -1,3 +1,6 @@
+# ==============================================================================
+# Global & Environment Outputs
+# ==============================================================================
 output "aws_region" {
   description = "AWS Region configured for deployment"
   value       = var.aws_region
@@ -13,32 +16,71 @@ output "project_name" {
   value       = var.project_name
 }
 
-output "vpc_cidr" {
-  description = "The Primary CIDR block of the VPC"
-  value       = var.vpc_cidr
+# ==============================================================================
+# VPC Module Outputs (Sprint 1 #8, #9, #10)
+# ==============================================================================
+output "vpc_id" {
+  description = "The Primary VPC ID"
+  value       = module.vpc.vpc_id
 }
 
-output "availability_zones" {
-  description = "Availability Zones used in the VPC"
-  value       = var.availability_zones
+output "public_subnet_ids" {
+  description = "Public Subnet IDs (ALB, NAT GW, Jenkins)"
+  value       = module.vpc.public_subnet_ids
 }
 
-output "public_subnet_cidrs" {
-  description = "Public Subnet CIDR allocations"
-  value       = var.public_subnet_cidrs
+output "private_compute_subnet_ids" {
+  description = "Private Compute Subnet IDs (EKS Nodes & Pods)"
+  value       = module.vpc.private_compute_subnet_ids
 }
 
-output "private_compute_subnet_cidrs" {
-  description = "Private Compute Subnet CIDR allocations (EKS & Apps)"
-  value       = var.private_compute_subnet_cidrs
+output "restricted_subnet_ids" {
+  description = "Restricted Subnet IDs (MongoDB)"
+  value       = module.vpc.restricted_subnet_ids
 }
 
-output "restricted_subnet_cidrs" {
-  description = "Restricted Database Subnet CIDR allocations (MongoDB)"
-  value       = var.restricted_subnet_cidrs
+output "nat_gateway_ip" {
+  description = "Elastic IP of the NAT Gateway"
+  value       = module.vpc.nat_gateway_ip
 }
 
-output "eks_cluster_version" {
-  description = "Kubernetes control plane version configured for EKS"
-  value       = var.eks_cluster_version
+# ==============================================================================
+# Security Group Outputs (Sprint 1 #11)
+# ==============================================================================
+output "alb_sg_id" {
+  description = "Security Group ID for ALB"
+  value       = module.security_groups.alb_security_group_id
+}
+
+output "jenkins_sg_id" {
+  description = "Security Group ID for Jenkins"
+  value       = module.security_groups.jenkins_security_group_id
+}
+
+output "eks_nodes_sg_id" {
+  description = "Security Group ID for EKS Nodes"
+  value       = module.security_groups.eks_nodes_security_group_id
+}
+
+output "mongodb_sg_id" {
+  description = "Security Group ID for MongoDB"
+  value       = module.security_groups.mongodb_security_group_id
+}
+
+# ==============================================================================
+# Jenkins EC2 Outputs (Sprint 2 #4 - for Ansible in Sprint 3)
+# ==============================================================================
+output "jenkins_instance_id" {
+  description = "EC2 Instance ID of the Jenkins Server"
+  value       = module.jenkins.jenkins_instance_id
+}
+
+output "jenkins_public_ip" {
+  description = "Public IP of the Jenkins Controller"
+  value       = module.jenkins.jenkins_public_ip
+}
+
+output "ansible_ssh_command" {
+  description = "SSH Command to connect to Jenkins Server"
+  value       = module.jenkins.ansible_ssh_command
 }
