@@ -8,9 +8,9 @@ This repository serves as the base application for an **End-to-End DevOps Capsto
 
 # 🏗️ Production Architecture & GitOps CI/CD Pipeline
 
-*Direct Artifact Reference: [`project_artifacts/architecture_diagram.png`](project_artifacts/architecture_diagram.png)*
+*Direct Artifact Reference: [`project_artifacts/architecture_diagram.png`](project_artifacts/architecture_diagram_v2.png)*
 
-![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/architecture_diagram.png)
+![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/architecture_diagram_v2.png)
 
 ### 📐 Architecture & Infrastructure Overview
 
