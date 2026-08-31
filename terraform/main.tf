@@ -39,7 +39,22 @@ module "ecr" {
   jenkins_role_arn = module.jenkins.jenkins_iam_role_arn
 }
 
-# 4. Jenkins EC2 Server Provisioning (Sprint 2 #4)
+# 4. EKS Cluster & Managed Node Group (Sprint 2 #12, #13)
+module "eks" {
+  source                      = "./modules/eks"
+  project_name                = var.project_name
+  environment                 = var.environment
+  eks_cluster_version         = var.eks_cluster_version
+  private_compute_subnet_ids  = module.vpc.private_compute_subnet_ids
+  public_subnet_ids           = module.vpc.public_subnet_ids
+  eks_nodes_security_group_id = module.security_groups.eks_nodes_security_group_id
+  node_instance_type          = "t3.medium"
+  node_desired_size           = 2
+  node_min_size               = 2
+  node_max_size               = 4
+}
+
+# 5. Jenkins EC2 Server Provisioning (Sprint 2 #4)
 module "jenkins" {
   source            = "./modules/jenkins"
   project_name      = var.project_name
