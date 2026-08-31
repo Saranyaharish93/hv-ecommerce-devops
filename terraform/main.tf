@@ -31,7 +31,15 @@ module "security_groups" {
   vpc_id       = module.vpc.vpc_id
 }
 
-# 3. Jenkins EC2 Server Provisioning (Sprint 2 #4)
+# 3. ECR Repository (Sprint 1 #3)
+module "ecr" {
+  source           = "./modules/ecr"
+  project_name     = var.project_name
+  environment      = var.environment
+  jenkins_role_arn = module.jenkins.jenkins_iam_role_arn
+}
+
+# 4. Jenkins EC2 Server Provisioning (Sprint 2 #4)
 module "jenkins" {
   source            = "./modules/jenkins"
   project_name      = var.project_name
