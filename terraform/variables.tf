@@ -51,3 +51,9 @@ variable "eks_cluster_version" {
   type        = string
   default     = "1.36"
 }
+
+variable "enable_eks" {
+  description = "Set to true to provision EKS cluster and node group. Set to false to destroy EKS and save costs when not in use (Sprint 4+)."
+  type        = bool
+  default     = false
+}
