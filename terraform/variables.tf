@@ -37,7 +37,7 @@ variable "public_subnet_cidrs" {
 variable "private_compute_subnet_cidrs" {
   description = "CIDR blocks for private compute subnets (EKS Nodes, Flask Pods, Jenkins)"
   type        = list(string)
-  default     = ["10.0.10.0/20", "10.0.20.0/20"]
+  default     = ["10.0.48.0/20", "10.0.64.0/20"]
 }
 
 variable "restricted_subnet_cidrs" {
