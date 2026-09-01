@@ -1,3 +1,8 @@
+output "jenkins_iam_role_arn" {
+  description = "IAM Role ARN of the Jenkins EC2 instance — used to grant ECR push/pull access"
+  value       = aws_iam_role.jenkins.arn
+}
+
 output "jenkins_instance_id" {
   description = "The EC2 Instance ID of the Jenkins Server"
   value       = aws_instance.jenkins.id

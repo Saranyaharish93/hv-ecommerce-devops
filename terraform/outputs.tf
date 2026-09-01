@@ -68,6 +68,24 @@ output "mongodb_sg_id" {
 }
 
 # ==============================================================================
+# ECR Repository Outputs (Sprint 1 #3)
+# ==============================================================================
+output "ecr_repository_url" {
+  description = "Full ECR repository URL — used in Jenkins pipeline docker push/pull"
+  value       = module.ecr.repository_url
+}
+
+output "ecr_repository_name" {
+  description = "ECR repository name"
+  value       = module.ecr.repository_name
+}
+
+output "ecr_registry_id" {
+  description = "AWS account ID of the ECR registry"
+  value       = module.ecr.registry_id
+}
+
+# ==============================================================================
 # Jenkins EC2 Outputs (Sprint 2 #4 - for Ansible in Sprint 3)
 # ==============================================================================
 output "jenkins_instance_id" {
