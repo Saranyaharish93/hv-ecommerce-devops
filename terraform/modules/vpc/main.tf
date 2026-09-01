@@ -72,8 +72,10 @@ resource "aws_subnet" "restricted" {
 
 # ==============================================================================
 # Task 10: NAT Gateway & Elastic IP
+# Controlled by enable_nat_gateway — destroy when EKS is not running (~$33/month)
 # ==============================================================================
 resource "aws_eip" "nat" {
+  count      = var.enable_nat_gateway ? 1 : 0
   domain     = "vpc"
   depends_on = [aws_internet_gateway.igw]
 
@@ -83,7 +85,8 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
+  count         = var.enable_nat_gateway ? 1 : 0
+  allocation_id = aws_eip.nat[0].id
   subnet_id     = aws_subnet.public[0].id
   depends_on    = [aws_internet_gateway.igw]
 
@@ -116,13 +119,18 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private Compute Route Table (0.0.0.0/0 -> NAT Gateway)
+# Private Compute Route Table
+# When NAT is enabled: 0.0.0.0/0 -> NAT Gateway
+# When NAT is disabled: local only (no internet — EKS not running)
 resource "aws_route_table" "private_compute" {
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
+  dynamic "route" {
+    for_each = var.enable_nat_gateway ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.nat[0].id
+    }
   }
 
   tags = {

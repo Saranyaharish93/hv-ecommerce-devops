@@ -19,6 +19,6 @@ output "restricted_subnet_ids" {
 }
 
 output "nat_gateway_ip" {
-  description = "Public Elastic IP of the NAT Gateway"
-  value       = aws_eip.nat.public_ip
+  description = "Public Elastic IP of the NAT Gateway (empty when enable_nat_gateway=false)"
+  value       = var.enable_nat_gateway ? aws_eip.nat[0].public_ip : "NAT Gateway not provisioned (enable_nat_gateway=false)"
 }
