@@ -21,6 +21,7 @@ module "vpc" {
   public_subnet_cidrs          = var.public_subnet_cidrs
   private_compute_subnet_cidrs = var.private_compute_subnet_cidrs
   restricted_subnet_cidrs      = var.restricted_subnet_cidrs
+  enable_nat_gateway           = var.enable_nat_gateway
 }
 
 # 2. Security Groups Module (Sprint 1 #11)

@@ -11,3 +11,7 @@ eks_cluster_version          = "1.36"
 # Set to true when starting Sprint 4 (Kubernetes deployment)
 # Set to false to destroy EKS and save ~$140/month when not in use
 enable_eks = false
+
+# Set to true together with enable_eks — NAT Gateway is only needed for EKS worker nodes
+# Set to false to destroy NAT Gateway and save ~$33/month when EKS is not running
+enable_nat_gateway = false

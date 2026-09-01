@@ -52,6 +52,12 @@ variable "eks_cluster_version" {
   default     = "1.36"
 }
 
+variable "enable_nat_gateway" {
+  description = "Set to true to provision NAT Gateway. Set to false to destroy and save ~$33/month when EKS is not running."
+  type        = bool
+  default     = false
+}
+
 variable "enable_eks" {
   description = "Set to true to provision EKS cluster and node group. Set to false to destroy EKS and save costs when not in use (Sprint 4+)."
   type        = bool
