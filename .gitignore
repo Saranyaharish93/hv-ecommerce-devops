@@ -31,6 +31,10 @@ mongo_data/
 
 Thumbs.db
 
+# SSH Private Keys — never commit
+*.pem
+ansible/jenkins_key.pem
+
 # Terraform
 **/.terraform/
 *.tfstate

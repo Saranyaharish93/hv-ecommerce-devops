@@ -48,7 +48,7 @@ module "eks" {
   private_compute_subnet_ids  = module.vpc.private_compute_subnet_ids
   public_subnet_ids           = module.vpc.public_subnet_ids
   eks_nodes_security_group_id = module.security_groups.eks_nodes_security_group_id
-  node_instance_type          = "t3.medium"
+  node_instance_type          = "t3.small"
   node_desired_size           = 2
   node_min_size               = 2
   node_max_size               = 4
@@ -61,5 +61,5 @@ module "jenkins" {
   environment       = var.environment
   public_subnet_id  = module.vpc.public_subnet_ids[0]
   security_group_id = module.security_groups.jenkins_security_group_id
-  instance_type     = "t3.medium"
+  instance_type     = "t3.small"
 }
