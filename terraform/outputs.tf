@@ -68,31 +68,31 @@ output "mongodb_sg_id" {
 }
 
 # ==============================================================================
-# EKS Cluster Outputs (Sprint 2 #12, #13)
+# EKS Cluster Outputs (Sprint 4 #12, #13) — only populated when enable_eks=true
 # ==============================================================================
 output "eks_cluster_name" {
   description = "EKS cluster name — use with: aws eks update-kubeconfig --name <value>"
-  value       = module.eks.cluster_name
+  value       = var.enable_eks ? module.eks[0].cluster_name : "EKS not provisioned (enable_eks=false)"
 }
 
 output "eks_cluster_endpoint" {
   description = "EKS API server endpoint"
-  value       = module.eks.cluster_endpoint
+  value       = var.enable_eks ? module.eks[0].cluster_endpoint : "EKS not provisioned (enable_eks=false)"
 }
 
 output "eks_cluster_version" {
   description = "Kubernetes version on the EKS control plane"
-  value       = module.eks.cluster_version
+  value       = var.enable_eks ? module.eks[0].cluster_version : "EKS not provisioned (enable_eks=false)"
 }
 
 output "eks_node_group_name" {
   description = "EKS managed node group name"
-  value       = module.eks.node_group_name
+  value       = var.enable_eks ? module.eks[0].node_group_name : "EKS not provisioned (enable_eks=false)"
 }
 
 output "eks_oidc_provider_arn" {
   description = "OIDC provider ARN for IRSA"
-  value       = module.eks.oidc_provider_arn
+  value       = var.enable_eks ? module.eks[0].oidc_provider_arn : "EKS not provisioned (enable_eks=false)"
 }
 
 # ==============================================================================
