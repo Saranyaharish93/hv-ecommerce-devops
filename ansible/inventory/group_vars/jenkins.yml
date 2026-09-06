@@ -1,0 +1,13 @@
+---
+jenkins_http_port: 8080
+jenkins_plugins:
+  - git
+  - github
+  - workflow-aggregator
+  - credentials-binding
+  - aws-credentials
+  - terraform
+
+jenkins_pipeline_repo: "https://github.com/Saranyaharish93/hv-ecommerce-devops.git"
+jenkins_pipeline_branch: "*/main"
+jenkins_job_name: "hv-ecommerce-devops-pipeline"

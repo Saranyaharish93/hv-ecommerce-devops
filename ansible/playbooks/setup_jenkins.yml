@@ -1,0 +1,9 @@
+---
+- name: Configure Jenkins Controller and CI/CD Tools
+  hosts: jenkins
+  become: yes
+  roles:
+    - common
+    - aws_cli
+    - terraform
+    - jenkins
