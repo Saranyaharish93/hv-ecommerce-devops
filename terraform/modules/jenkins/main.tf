@@ -89,3 +89,25 @@ resource "aws_instance" "jenkins" {
     Role = "CI-CD-Controller"
   }
 }
+
+# 4. Permanent Elastic IP for Jenkins
+resource "aws_eip" "jenkins" {
+  instance = aws_instance.jenkins.id
+  domain   = "vpc"
+  tags = {
+    Name = "${var.project_name}-${var.environment}-jenkins-eip"
+  }
+}
+
+resource "local_file" "ansible_inventory" {
+  content  = <<-EOT
+  [jenkins]
+  jenkins-server ansible_host=${aws_eip.jenkins.public_ip}
+
+  [all:vars]
+  ansible_user=ubuntu
+  ansible_ssh_private_key_file=~/.ssh/jenkins_key.pem
+  ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+  EOT
+  filename = "${path.root}/../ansible/inventory/hosts.ini"
+}

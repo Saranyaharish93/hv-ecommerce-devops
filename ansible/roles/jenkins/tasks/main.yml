@@ -1,0 +1,193 @@
+---
+# ==============================================================================
+# 1. Clean Stale Repository Configurations
+# ==============================================================================
+- name: Clean up any stale Jenkins lines from main sources.list
+  lineinfile:
+    path: /etc/apt/sources.list
+    regexp: '.*pkg\.jenkins\.io.*'
+    state: absent
+  ignore_errors: true
+
+- name: Clean up old Jenkins keyrings and list files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/jenkins.list
+    - /etc/apt/trusted.gpg.d/jenkins.gpg
+    - /usr/share/keyrings/jenkins-keyring.asc
+    - /usr/share/keyrings/jenkins-keyring.gpg
+
+- name: Remove any remaining repository files referencing pkg.jenkins.io
+  shell: |
+    grep -l "pkg.jenkins.io" /etc/apt/sources.list.d/* 2>/dev/null | xargs rm -f || true
+  changed_when: false
+
+# ==============================================================================
+# 2. Download and Configure Official GPG Key & APT Repo (2026 Key ID 7198F4B714ABFC68)
+# ==============================================================================
+- name: Download official Jenkins 2026 GPG key and configure keyrings
+  shell: |
+    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key | tee /usr/share/keyrings/jenkins-keyring.asc | gpg --dearmor --yes -o /usr/share/keyrings/jenkins-keyring.gpg
+    chmod 644 /usr/share/keyrings/jenkins-keyring.asc /usr/share/keyrings/jenkins-keyring.gpg
+  changed_when: false
+
+- name: Add Jenkins official APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+    state: present
+    filename: jenkins
+    update_cache: yes
+
+# ==============================================================================
+# 3. Install and Start Jenkins Service
+# ==============================================================================
+- name: Remove outdated Java 17 packages
+  apt:
+    name:
+      - openjdk-17-jre
+      - openjdk-17-jre-headless
+    state: absent
+
+- name: Ensure Java 21 and fontconfig are installed
+  apt:
+    name:
+      - fontconfig
+      - openjdk-21-jre
+    state: present
+
+- name: Install Jenkins LTS package
+  apt:
+    name: jenkins
+    state: present
+    update_cache: yes
+
+- name: Create systemd override directory for Jenkins
+  file:
+    path: /etc/systemd/system/jenkins.service.d
+    state: directory
+    mode: '0755'
+
+- name: Configure systemd override for Jenkins CLI and Java options
+  copy:
+    dest: /etc/systemd/system/jenkins.service.d/override.conf
+    content: |
+      [Service]
+      Environment="JAVA_OPTS=-Djava.awt.headless=true -Dhudson.cli.CLIAction.ACCEPT_URL_FROM_REQUEST=true"
+    mode: '0644'
+
+- name: Create Jenkins init.groovy.d directory
+  file:
+    path: /var/lib/jenkins/init.groovy.d
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0755'
+
+- name: Set Jenkins root URL via init script to authorize CLI handshake
+  copy:
+    dest: /var/lib/jenkins/init.groovy.d/01-set-url.groovy
+    content: |
+      import jenkins.model.JenkinsLocationConfiguration
+      def location = JenkinsLocationConfiguration.get()
+      location.setUrl("http://localhost:{{ jenkins_http_port }}/")
+      location.save()
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+
+- name: Preconfigure JenkinsLocationConfiguration XML
+  copy:
+    dest: /var/lib/jenkins/jenkins.model.JenkinsLocationConfiguration.xml
+    content: |
+      <?xml version='1.1' encoding='UTF-8'?>
+      <jenkins.model.JenkinsLocationConfiguration>
+        <jenkinsUrl>http://localhost:{{ jenkins_http_port }}/</jenkinsUrl>
+      </jenkins.model.JenkinsLocationConfiguration>
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+
+- name: Reset failed systemd state for jenkins
+  command: systemctl reset-failed jenkins
+  ignore_errors: true
+  changed_when: false
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and restart Jenkins systemd service
+  systemd:
+    name: jenkins
+    state: restarted
+    enabled: yes
+
+# ==============================================================================
+# 4. Wait for Initialization & Extract Admin Token
+# ==============================================================================
+- name: Wait for Jenkins port {{ jenkins_http_port }} to be open
+  wait_for:
+    port: "{{ jenkins_http_port }}"
+    delay: 5
+    timeout: 180
+
+- name: Wait for initialAdminPassword file to be generated
+  wait_for:
+    path: /var/lib/jenkins/secrets/initialAdminPassword
+    timeout: 180
+
+- name: Download Jenkins CLI jar from running controller
+  get_url:
+    url: "http://localhost:{{ jenkins_http_port }}/jnlpJars/jenkins-cli.jar"
+    dest: /opt/jenkins-cli.jar
+    mode: '0755'
+
+- name: Read Initial Admin Password
+  slurp:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+  register: admin_pass_raw
+
+- name: Set admin password variable
+  set_fact:
+    admin_password: "{{ admin_pass_raw['content'] | b64decode | trim }}"
+
+# ==============================================================================
+# 5. Install Plugins & Restart (Task #5)
+# ==============================================================================
+- name: Install required Jenkins plugins in batch (Task #5)
+  command: >
+    java -jar /opt/jenkins-cli.jar -s http://localhost:{{ jenkins_http_port }}/
+    -auth admin:{{ admin_password }}
+    install-plugin {{ jenkins_plugins | join(' ') }}
+  register: plugin_install
+  changed_when: "'Installed' in plugin_install.stdout"
+
+- name: Restart Jenkins to activate plugins
+  systemd:
+    name: jenkins
+    state: restarted
+
+- name: Wait for Jenkins port {{ jenkins_http_port }} to reopen after restart
+  wait_for:
+    port: "{{ jenkins_http_port }}"
+    delay: 10
+    timeout: 180
+
+# ==============================================================================
+# 6. Register Pipeline Job (Task #6 & #15)
+# ==============================================================================
+- name: Deploy Pipeline Job Definition XML template
+  template:
+    src: job.xml.j2
+    dest: /tmp/job.xml
+
+- name: Register Pipeline Job in Jenkins (Task #6 & #15)
+  shell: >
+    java -jar /opt/jenkins-cli.jar -s http://localhost:{{ jenkins_http_port }}/
+    -auth admin:{{ admin_password }}
+    create-job "{{ jenkins_job_name }}" < /tmp/job.xml ||
+    java -jar /opt/jenkins-cli.jar -s http://localhost:{{ jenkins_http_port }}/
+    -auth admin:{{ admin_password }}
+    update-job "{{ jenkins_job_name }}" < /tmp/job.xml

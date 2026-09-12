@@ -1,0 +1,25 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Remove outdated OpenJDK 17
+  apt:
+    name:
+      - openjdk-17-jre
+      - openjdk-17-jre-headless
+    state: absent
+
+- name: Install baseline utilities, fontconfig, and OpenJDK 21
+  apt:
+    name:
+      - fontconfig
+      - openjdk-21-jre
+      - curl
+      - wget
+      - git
+      - unzip
+      - gnupg
+      - lsb-release
+    state: present

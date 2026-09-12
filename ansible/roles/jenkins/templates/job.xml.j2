@@ -1,0 +1,25 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Automated Infrastructure Pipeline for Lumora E-Commerce DevOps (Sprint 2 #15)</description>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github">
+      <projectUrl>{{ jenkins_pipeline_repo }}/</projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git">
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>{{ jenkins_pipeline_repo }}</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>{{ jenkins_pipeline_branch }}</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+    </scm>
+    <scriptPath>Jenkinsfile</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+</flow-definition>
