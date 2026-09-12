@@ -84,6 +84,10 @@ resource "aws_instance" "jenkins" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [ami]
+  }
+
   tags = {
     Name = "${var.project_name}-${var.environment}-jenkins-server"
     Role = "CI-CD-Controller"
