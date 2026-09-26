@@ -110,7 +110,7 @@ resource "local_file" "ansible_inventory" {
 
   [all:vars]
   ansible_user=ubuntu
-  ansible_ssh_private_key_file=~/.ssh/jenkins_key.pem
+  ansible_ssh_private_key_file={{ inventory_dir }}/../jenkins_key.pem
   ansible_ssh_common_args='-o StrictHostKeyChecking=no'
   EOT
   filename = "${path.root}/../ansible/inventory/hosts.ini"

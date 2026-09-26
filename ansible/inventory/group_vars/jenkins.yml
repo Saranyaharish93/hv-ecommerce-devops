@@ -7,6 +7,8 @@ jenkins_plugins:
   - credentials-binding
   - aws-credentials
   - terraform
+  - timestamper
+  - ws-cleanup
 
 jenkins_pipeline_repo: "https://github.com/Saranyaharish93/hv-ecommerce-devops.git"
 jenkins_pipeline_branch: "*/main"
