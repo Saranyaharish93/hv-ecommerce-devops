@@ -7,3 +7,4 @@
     - aws_cli
     - terraform
     - jenkins
+    - docker
