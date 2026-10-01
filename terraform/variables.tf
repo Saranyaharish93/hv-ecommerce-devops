@@ -63,3 +63,19 @@ variable "enable_eks" {
   type        = bool
   default     = false
 }
+
+variable "monthly_budget_limit" {
+  description = "FinOps: Monthly budget ceiling in USD"
+  type        = string
+  default     = "25"
+}
+
+variable "budget_notification_emails" {
+  description = "FinOps: Email addresses to receive budget threshold alerts"
+  type        = list(string)
+  default     = ["rinku.chn07@gmail.com",
+                 "thiagarajanb@gmail.com",
+                 "saranya.smiles55@gmail.com",
+                 "nivedhasaibaba@gmail.com" 
+                ]
+}
