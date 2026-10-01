@@ -26,6 +26,7 @@ pipeline {
                 echo 'Validating CLI tools (Terraform & AWS CLI)...'
                 sh 'terraform version'
                 sh 'aws --version'
+                sh 'infracost --version || true' 
                 sh 'aws sts get-caller-identity'
             }
         }
@@ -54,6 +55,27 @@ pipeline {
                 echo 'Generating Terraform Execution Plan...'
                 dir("${env.TF_DIR}") {
                     sh 'terraform plan -no-color -out=tfplan'
+                }
+            }
+        }
+
+                stage('FinOps: Cost Estimation') {
+            steps {
+                echo 'Estimating AWS Infrastructure Cost via Infracost...'
+                script {
+                    try {
+                        withCredentials([string(credentialsId: 'infracost-api-key', variable: 'INFRACOST_API_KEY')]) {
+                            dir("${env.TF_DIR}") {
+                                sh '''
+                                    infracost breakdown --path . --format table --out-file ../infracost-report.txt
+                                    cat ../infracost-report.txt
+                                '''
+                            }
+                            archiveArtifacts artifacts: 'infracost-report.txt', allowEmptyArchive: true
+                        }
+                    } catch (Exception e) {
+                        echo "Notice: Infracost cost estimation skipped or failed: ${e.getMessage()}. Ensure 'infracost-api-key' is configured in Jenkins Credentials."
+                    }
                 }
             }
         }

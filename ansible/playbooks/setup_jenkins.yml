@@ -6,4 +6,5 @@
     - common
     - aws_cli
     - terraform
+    - infracost
     - jenkins
