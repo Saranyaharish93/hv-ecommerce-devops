@@ -8,7 +8,7 @@ provider "aws" {
       Project     = var.project_name
       Environment = var.environment
       Owner       = "MultiCloud-Mavericks"
-      CostCenter  = "CAPSTONE-B16A"
+      CostCenter  = "Multicloud-Mavericks"
 
       # Technical Context
       ManagedBy  = "Terraform"
