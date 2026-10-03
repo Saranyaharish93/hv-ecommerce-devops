@@ -6,6 +6,8 @@ jenkins_plugins:
   - workflow-aggregator
   - credentials-binding
   - aws-credentials
+  - docker-workflow
+  - kubernetes
   - terraform
   - timestamper
   - ws-cleanup
