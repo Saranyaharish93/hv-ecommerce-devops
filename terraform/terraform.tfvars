@@ -19,7 +19,7 @@ enable_nat_gateway = false
 # Set FinOps budget variables
 monthly_budget_limit = "25"
 budget_notification_emails = ["rinku.chn07@gmail.com",
-                              "thiagarajanb@gmail.com",
-                              "saranya.smiles55@gmail.com",
-                              "nivedhasaibaba@gmail.com" 
-                             ]
+  "thiagarajanb@gmail.com",
+  "saranya.smiles55@gmail.com",
+  "nivedhasaibaba@gmail.com"
+]

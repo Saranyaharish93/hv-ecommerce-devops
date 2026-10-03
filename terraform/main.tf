@@ -43,7 +43,7 @@ module "ecr" {
 # 4. EKS Cluster & Managed Node Group (Sprint 4 #12, #13)
 # Controlled by enable_eks variable — set to true when starting Sprint 4
 module "eks" {
-  count  = var.enable_eks ? 1 : 0
+  count                       = var.enable_eks ? 1 : 0
   source                      = "./modules/eks"
   project_name                = var.project_name
   environment                 = var.environment

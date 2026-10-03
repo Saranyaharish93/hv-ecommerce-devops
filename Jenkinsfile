@@ -23,10 +23,10 @@ pipeline {
 
         stage('Validate Prerequisites') {
             steps {
-                echo 'Validating CLI tools (Terraform & AWS CLI)...'
+                echo 'Validating Terraform, AWS CLI and AWS authentication...'
                 sh 'terraform version'
                 sh 'aws --version'
-                sh 'infracost --version || true' 
+                sh 'infracost --version || true'
                 sh 'aws sts get-caller-identity'
             }
         }
@@ -35,43 +35,79 @@ pipeline {
             steps {
                 echo 'Initializing Terraform S3 Remote State Backend...'
                 dir("${env.TF_DIR}") {
-                    sh 'terraform init -no-color'
+                    sh 'terraform init -input=false -no-color'
                 }
             }
         }
 
-        stage('Terraform Validate & Format Check') {
+        stage('Terraform Format Check') {
             steps {
-                echo 'Validating Terraform code structure...'
+                echo 'Checking Terraform formatting...'
+                dir("${env.TF_DIR}") {
+                    sh 'terraform fmt -check -recursive -no-color'
+                }
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                echo 'Validating Terraform configuration...'
                 dir("${env.TF_DIR}") {
                     sh 'terraform validate -no-color'
-                    sh 'terraform fmt -check -no-color || true'
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                echo 'Generating Terraform Execution Plan...'
+                echo 'Generating Terraform execution plan...'
                 dir("${env.TF_DIR}") {
-                    sh 'terraform plan -no-color -out=tfplan'
+                    sh '''
+                        terraform plan \
+                            -input=false \
+                            -no-color \
+                            -out=tfplan
+
+                        terraform show \
+                            -no-color \
+                            tfplan > tfplan.txt
+                    '''
                 }
             }
         }
 
-                stage('FinOps: Cost Estimation') {
+        stage('Archive Terraform Plan') {
+            steps {
+                echo 'Archiving Terraform plan for review...'
+                archiveArtifacts artifacts: 'terraform/tfplan.txt',
+                                 fingerprint: true
+            }
+        }
+
+        stage('FinOps: Cost Estimation') {
             steps {
                 echo 'Estimating AWS Infrastructure Cost via Infracost...'
                 script {
                     try {
-                        withCredentials([string(credentialsId: 'infracost-api-key', variable: 'INFRACOST_API_KEY')]) {
+                        withCredentials([
+                            string(
+                                credentialsId: 'infracost-api-key',
+                                variable: 'INFRACOST_API_KEY'
+                            )
+                        ]) {
                             dir("${env.TF_DIR}") {
                                 sh '''
-                                    infracost breakdown --path . --format table --out-file ../infracost-report.txt
+                                    infracost breakdown \
+                                        --path . \
+                                        --format table \
+                                        --out-file ../infracost-report.txt
+
                                     cat ../infracost-report.txt
                                 '''
                             }
-                            archiveArtifacts artifacts: 'infracost-report.txt', allowEmptyArchive: true
+
+                            archiveArtifacts artifacts: 'infracost-report.txt',
+                                             allowEmptyArchive: true
                         }
                     } catch (Exception e) {
                         echo "Notice: Infracost cost estimation skipped or failed: ${e.getMessage()}. Ensure 'infracost-api-key' is configured in Jenkins Credentials."
@@ -80,14 +116,30 @@ pipeline {
             }
         }
 
+        stage('Terraform Apply Approval') {
+            when {
+                branch 'main'
+            }
+            steps {
+                input message: 'Review the archived Terraform plan. Apply infrastructure changes?',
+                      ok: 'Apply'
+            }
+        }
+
         stage('Terraform Apply') {
             when {
                 branch 'main'
             }
             steps {
-                echo 'Applying Infrastructure Changes via Terraform...'
+                echo 'Applying approved Terraform infrastructure changes...'
                 dir("${env.TF_DIR}") {
-                    sh 'terraform apply -no-color -auto-approve tfplan'
+                    sh '''
+                        terraform apply \
+                            -input=false \
+                            -no-color \
+                            -auto-approve \
+                            tfplan
+                    '''
                 }
             }
         }
@@ -98,9 +150,11 @@ pipeline {
             echo 'Pipeline execution completed.'
             cleanWs(deleteDirs: true, notFailBuild: true)
         }
+
         success {
             echo 'Terraform Jenkins Pipeline executed successfully!'
         }
+
         failure {
             echo 'Pipeline failed. Check build logs for diagnostic details.'
         }
