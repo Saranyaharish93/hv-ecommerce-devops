@@ -145,18 +145,16 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            echo 'Pipeline execution completed.'
-            cleanWs(deleteDirs: true, notFailBuild: true)
-        }
-
-        success {
-            echo 'Terraform Jenkins Pipeline executed successfully!'
-        }
-
-        failure {
-            echo 'Pipeline failed. Check build logs for diagnostic details.'
-        }
+   post {
+    always {
+        echo 'Pipeline execution completed.'
+        deleteDir()
     }
+    success {
+        echo 'Terraform Jenkins Pipeline executed successfully!'
+    }
+    failure {
+        echo 'Pipeline failed. Check build logs for diagnostic details.'
+    }
+}
 }
