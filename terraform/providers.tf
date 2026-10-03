@@ -5,17 +5,17 @@ provider "aws" {
   default_tags {
     tags = {
       # Ownership & Accounting
-      Project       = var.project_name
-      Environment   = var.environment
-      Owner         = "MultiCloud-Mavericks"
-      CostCenter    = "CAPSTONE-B16A"
-      
+      Project     = var.project_name
+      Environment = var.environment
+      Owner       = "MultiCloud-Mavericks"
+      CostCenter  = "CAPSTONE-B16A"
+
       # Technical Context
-      ManagedBy     = "Terraform"
-      Repository    = "hv-ecommerce-devops"
-      
+      ManagedBy  = "Terraform"
+      Repository = "hv-ecommerce-devops"
+
       # FinOps & Governance
-      AutoStop      = "true"             # Eligible for non-business-hours shutdown
+      AutoStop      = "true" # Eligible for non-business-hours shutdown
       ProvisionDate = "2026-10-01"
     }
   }
