@@ -1,0 +1,37 @@
+---
+# ==============================================================================
+# Ansible Role: Kubectl CLI (Sprint 3 Issue #19)
+# Installs Kubernetes command-line tool for cluster management
+# ==============================================================================
+
+- name: Check if kubectl is installed
+  command: kubectl version --client
+  register: kubectl_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Install kubectl CLI binary
+  when: kubectl_check.rc != 0
+  block:
+    - name: Fetch latest stable kubectl version string
+      uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: yes
+      register: kubectl_stable_version
+      ignore_errors: true
+
+    - name: Set kubectl version fact
+      set_fact:
+        kubectl_version: "{{ kubectl_stable_version.content | trim if (kubectl_stable_version is succeeded and kubectl_stable_version.content is defined) else 'v1.31.0' }}"
+
+    - name: Download official kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        owner: root
+        group: root
+
+- name: Validate kubectl binary
+  command: kubectl version --client
+  changed_when: false
