@@ -75,6 +75,17 @@ resource "aws_iam_role_policy_attachment" "eks_ebs_csi" {
 }
 
 # ==============================================================================
+# FinOps: CloudWatch Log Group with 7-Day Retention for EKS Control Plane
+# ==============================================================================
+resource "aws_cloudwatch_log_group" "eks_cluster" {
+  name              = "/aws/eks/${var.project_name}-${var.environment}/cluster"
+  retention_in_days = 7 # FinOps: Prune control plane logs after 7 days in non-prod
+  tags = {
+    Name = "${var.project_name}-${var.environment}-eks-cw-logs"
+  }
+}
+
+# ==============================================================================
 # Task 12: EKS Control Plane
 # ==============================================================================
 resource "aws_eks_cluster" "main" {
@@ -93,6 +104,7 @@ resource "aws_eks_cluster" "main" {
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   depends_on = [
+    aws_cloudwatch_log_group.eks_cluster, # Ensures log group exists with 7-day retention first
     aws_iam_role_policy_attachment.eks_cluster_policy,
     aws_iam_role_policy_attachment.eks_vpc_resource_controller,
   ]
