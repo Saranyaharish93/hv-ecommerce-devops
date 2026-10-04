@@ -142,6 +142,35 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to EKS & Setup Metrics Server') {
+            when {
+                // Guard: Only run if the EKS cluster is actively provisioned on AWS
+                expression {
+                    return sh(
+                        script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                        returnStatus: true
+                    ) == 0
+                }
+            }
+            steps {
+                echo 'EKS Cluster is ACTIVE. Deploying Metrics Server and Workloads...'
+                sh '''
+                    # 1. Run automated Metrics Server check & installation
+                    chmod +x scripts/setup_metrics_server.sh
+                    ./scripts/setup_metrics_server.sh
+
+                    # 2. Deploy application manifests and HPA via Kustomize
+                    kubectl apply -k k8s/
+
+                    # 3. Wait for Flask app rollout
+                    kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
+
+                    # 4. Display live HPA status
+                    kubectl get hpa -n lumora-prod
+                '''
+            }
+        }
     }
 
    post {
