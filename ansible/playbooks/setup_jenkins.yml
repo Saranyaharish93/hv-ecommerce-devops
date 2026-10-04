@@ -5,6 +5,8 @@
   roles:
     - common
     - aws_cli
+    - docker
+    - kubectl
     - terraform
     - infracost
     - jenkins

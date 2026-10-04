@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lumora-prod
+  labels:
+    app.kubernetes.io/name: lumora-ecommerce
+    app.kubernetes.io/part-of: lumora-platform
+    environment: prod
+    cost-center: Multicloud-Mavericks
+    owner: MultiCloud-Mavericks
+    auto-stop: "true"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: lumora-prod-quota
+  namespace: lumora-prod
+spec:
+  hard:
+    requests.cpu: "1500m"
+    requests.memory: 2Gi
+    limits.cpu: "3000m"
+    limits.memory: 4Gi
+    pods: "10"
