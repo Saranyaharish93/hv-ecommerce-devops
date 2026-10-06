@@ -143,6 +143,32 @@ pipeline {
             }
         }
 
+        stage('Ansible Configuration Check') {
+            steps {
+                echo 'Running Ansible syntax verification...'
+                sh '''
+                    if command -v ansible-playbook >/dev/null 2>&1; then
+                        echo "Ansible detected. Validating playbook syntax..."
+                        ansible-playbook --syntax-check ansible/playbooks/setup_jenkins.yml
+                    else
+                        echo "Ansible not present on this runner, skipping syntax check."
+                    fi
+                '''
+            }
+        }
+
+        stage('Application Test (Pytest)') {
+            steps {
+                echo 'Executing automated unit tests...'
+                sh '''
+                    python3 -m venv .venv || true
+                    . .venv/bin/activate || true
+                    pip install -r requirements.txt pytest
+                    python3 -m pytest tests/ -v
+                '''
+            }
+        }
+
         stage('Deploy to EKS & Setup Metrics Server') {
             when {
                 // Guard: Only run if the EKS cluster is actively provisioned on AWS
