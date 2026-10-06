@@ -5,6 +5,9 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-east-1'
         TF_IN_AUTOMATION   = 'true'
         TF_DIR             = 'terraform'
+        ECR_REGISTRY       = '759530261212.dkr.ecr.us-east-1.amazonaws.com'
+        ECR_REPOSITORY     = 'lumora-ecommerce-flask'
+        IMAGE_TAG          = "${env.BUILD_NUMBER ?: 'latest'}"
     }
 
     options {
@@ -165,6 +168,52 @@ pipeline {
                     . .venv/bin/activate || true
                     pip install -r requirements.txt pytest
                     python3 -m pytest tests/ -v
+                '''
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "Building Docker image: ${env.ECR_REPOSITORY}:${env.IMAGE_TAG}..."
+                sh '''
+                    docker build \
+                        -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
+                        -t ${ECR_REPOSITORY}:latest \
+                        .
+                    docker images | grep ${ECR_REPOSITORY}
+                '''
+            }
+        }
+
+        stage('Trivy Container Security Scan') {
+            steps {
+                echo 'Scanning container image for vulnerabilities using Trivy...'
+                sh '''
+                    if command -v trivy >/dev/null 2>&1; then
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            --exit-code 0 \
+                            --format table \
+                            ${ECR_REPOSITORY}:${IMAGE_TAG}
+                    else
+                        echo "Notice: Trivy is not installed on this runner. Skipping image vulnerability scan."
+                    fi
+                '''
+            }
+        }
+
+        stage('Push Docker Image to AWS ECR') {
+            steps {
+                echo "Authenticating Docker to ECR and pushing image to ${env.ECR_REGISTRY}..."
+                sh '''
+                    aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | \
+                        docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+                    docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    docker tag ${ECR_REPOSITORY}:latest ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+
+                    docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
                 '''
             }
         }
