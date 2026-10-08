@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: lumora-ecommerce
-          image: 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-prod-ecr:latest
+          image: 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
