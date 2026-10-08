@@ -99,12 +99,18 @@ pipeline {
                         ]) {
                             dir("${env.TF_DIR}") {
                                 sh '''
-                                    infracost breakdown \
-                                        --path . \
-                                        --format table \
-                                        --out-file ../infracost-report.txt
-
-                                    cat ../infracost-report.txt
+                                    if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
+                                        infracost breakdown \
+                                            --path . \
+                                            --format table \
+                                            --out-file ../infracost-report.txt || true
+                                        
+                                        if [ -f ../infracost-report.txt ]; then
+                                            cat ../infracost-report.txt
+                                        fi
+                                    else
+                                        echo "Notice: Valid INFRACOST_API_KEY not provided. Skipping Infracost scan to avoid interactive prompt."
+                                    fi
                                 '''
                             }
 
