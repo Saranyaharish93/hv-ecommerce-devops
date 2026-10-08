@@ -99,17 +99,23 @@ pipeline {
                         ]) {
                             dir("${env.TF_DIR}") {
                                 sh '''
+                                    export INFRACOST_NO_COLOR=true
+                                    export INFRACOST_SKIP_UPDATE_CHECK=true
+                                    
+                                    # If key exists and is non-empty, pass it explicitly; timeout after 20s so it can never hang
                                     if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
-                                        infracost breakdown \
+                                        echo "Running Infracost cost estimation..."
+                                        timeout 20s infracost breakdown \
+                                            --api-key "${INFRACOST_API_KEY}" \
                                             --path . \
                                             --format table \
-                                            --out-file ../infracost-report.txt || true
+                                            --out-file ../infracost-report.txt || echo "Notice: Infracost scan timed out or key invalid, proceeding."
                                         
                                         if [ -f ../infracost-report.txt ]; then
                                             cat ../infracost-report.txt
                                         fi
                                     else
-                                        echo "Notice: Valid INFRACOST_API_KEY not provided. Skipping Infracost scan to avoid interactive prompt."
+                                        echo "Notice: Valid INFRACOST_API_KEY not configured. Skipping."
                                     fi
                                 '''
                             }
