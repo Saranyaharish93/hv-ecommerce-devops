@@ -120,8 +120,10 @@ pipeline {
                                 '''
                             }
 
-                            archiveArtifacts artifacts: 'infracost-report.txt',
-                                             allowEmptyArchive: true
+                            if (fileExists('infracost-report.txt')) {
+                                archiveArtifacts artifacts: 'infracost-report.txt',
+                                                 allowEmptyArchive: true
+                            }
                         }
                     } catch (Exception e) {
                         echo "Notice: Infracost cost estimation skipped or failed: ${e.getMessage()}. Ensure 'infracost-api-key' is configured in Jenkins Credentials."
@@ -161,14 +163,16 @@ pipeline {
         stage('Ansible Configuration Check') {
             steps {
                 echo 'Running Ansible syntax verification...'
-                sh '''
-                    if command -v ansible-playbook >/dev/null 2>&1; then
-                        echo "Ansible detected. Validating playbook syntax..."
-                        ansible-playbook --syntax-check ansible/playbooks/setup_jenkins.yml
-                    else
-                        echo "Ansible not present on this runner, skipping syntax check."
-                    fi
-                '''
+                dir('ansible') {
+                    sh '''
+                        if command -v ansible-playbook >/dev/null 2>&1; then
+                            echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
+                            ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
+                        else
+                            echo "Ansible not present on this runner, skipping syntax check."
+                        fi
+                    '''
+                }
             }
         }
 
