@@ -2,4 +2,15 @@
 __pycache__
 .pytest_cache
 .venv
-terraform/.terraform
+terraform
+ansible
+k8s
+project_artifacts
+scripts
+*.pem
+*.tfvars
+*.docx
+*.log
+*.html
+Jenkinsfile
+azure-pipelines.yml
