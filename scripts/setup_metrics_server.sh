@@ -41,5 +41,36 @@ else
 fi
 
 echo "=========================================================="
-echo " 🎉 Metrics Server verification complete! HPA is ready."
+echo " 🔐 [Secrets CSI Pre-flight] Checking Secrets Store CSI Driver"
+echo "=========================================================="
+
+# 5. Check if the SecretProviderClass CRD is registered
+if ! kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io >/dev/null 2>&1; then
+    echo "⚠️  Secrets Store CSI Driver CRDs not detected."
+    echo "🚀 Installing Secrets Store CSI Driver & AWS Provider..."
+    if command -v helm >/dev/null 2>&1; then
+        echo "Installing via Helm..."
+        helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts --force-update || true
+        helm repo add aws-secrets-manager https://aws.github.io/secrets-store-csi-driver-provider-aws --force-update || true
+        helm repo update
+        helm upgrade --install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver \
+            --namespace kube-system \
+            --set syncSecret.enabled=true
+        helm upgrade --install secrets-provider-aws aws-secrets-manager/secrets-store-csi-driver-provider-aws \
+            --namespace kube-system
+    else
+        echo "Helm not detected. Installing via official Kubernetes SIGs and AWS manifests..."
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/main/deploy/rbac-secretproviderclass.yaml
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/main/deploy/csidriver.yaml
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/main/deploy/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/main/deploy/secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/main/deploy/secrets-store-csi-driver.yaml
+        kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+    fi
+else
+    echo "✅ Secrets Store CSI Driver (secretproviderclasses CRD) is already registered."
+fi
+
+echo "=========================================================="
+echo " 🎉 Cluster Pre-flight Complete! Metrics & Secrets CSI Ready."
 echo "=========================================================="

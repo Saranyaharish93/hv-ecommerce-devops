@@ -544,9 +544,19 @@ def wishlist_to_cart(product_id):
 
 
 @bp.get("/health")
-def health():
-    current_app.db.command("ping")
+@bp.get("/health/live")
+def health_live():
+    """Liveness probe: verifies that the web process is running."""
     return {"status": "UP", "service": "hv-ecommerce"}, 200
+
+@bp.get("/health/ready")
+def health_ready():
+    """Readiness probe: verifies database connectivity safely."""
+    try:
+        current_app.db.command("ping")
+        return {"status": "READY", "database": "connected"}, 200
+    except Exception as e:
+        return {"status": "DEGRADED", "database": str(e)}, 503
 
 
 @bp.get("/")
