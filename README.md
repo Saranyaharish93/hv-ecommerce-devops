@@ -4,33 +4,19 @@ Lumora is a full-stack e-commerce web application developed using **Python Flask
 
 This repository serves as the base application for an **End-to-End DevOps Capstone Project**, demonstrating CI/CD automation, cloud infrastructure provisioning, container orchestration with Kubernetes on AWS, security scanning, and full-stack observability.
 
+> **Master DevOps Documentation**: For deep-dive architectural breakdowns, pipeline stages, Kubernetes manifests, Ansible roles, Prometheus alerts, and FinOps governance, see the comprehensive [DevOps Platform Documentation Suite](devops/README.md).
+
 ---
 
 # 🏗️ Production Architecture & GitOps CI/CD Pipeline
 
-*Direct Artifact Reference: [`project_artifacts/architecture_diagram.png`](project_artifacts/architecture_diagram_v2.png)*
+*Direct Artifact Reference: [`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)*
 
-![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/architecture_diagram_v2.png)
+![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
 
 ### 📐 Architecture & Infrastructure Overview
 
 The Lumora DevOps platform implements an enterprise-grade, resilient, multi-AZ cloud architecture on **Amazon Web Services (AWS)** using **GitOps**, **Infrastructure as Code (IaC)**, and **automated CI/CD pipelines**.
-
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 LUMORA DEVOPS CLOUD ARCHITECTURE                                 │
-├───────────────────────────────┬──────────────────────────────────┬───────────────────────────────┤
-│ 1. Source Control & GitOps    │ 2. CI/CD & Security (Jenkins)    │ 3. Artifacts & Remote State   │
-│    • GitHub Feature Branches  │    • Pytest Unit Testing         │    • AWS ECR (Container Reg.) │
-│    • Pull Requests & Webhooks │    • Trivy Vulnerability Scan    │    • AWS S3 (Terraform State) │
-│    • Main Branch Integration  │    • Multi-stage Docker Build    │    • DynamoDB (State Locking) │
-├───────────────────────────────┼──────────────────────────────────┼───────────────────────────────┤
-│ 4. AWS VPC (Multi-AZ Network) │ 5. Container Workloads (EKS)     │ 6. Observability & Operations │
-│    • Dual-AZ Public Subnets   │    • Flask Deployment (Gunicorn) │    • Prometheus Server        │
-│    • Dual-AZ Private Subnets  │    • Horizontal Pod Auto (HPA)   │    • Grafana KPI Dashboards   │
-│    • AWS ALB + NAT Gateways   │    • MongoDB StatefulSet + EBS   │    • Alertmanager + Slack     │
-└───────────────────────────────┴──────────────────────────────────┴───────────────────────────────┘
-```
 
 #### 1. 🐙 Source Control & Collaboration
 - **Developer Workflow**: Developers work on feature branches and submit Pull Requests to the `main` branch on GitHub.
@@ -755,7 +741,7 @@ The current Flask + MongoDB application will be used for the upcoming end-to-end
 - [ ] Security scan evidence
 - [ ] Project documentation
 - [ ] Final presentation
-- [ ] Viva preparation
+- [ ] Project evaluation & demonstration
 
 
 
