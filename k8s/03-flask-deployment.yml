@@ -75,7 +75,7 @@ spec:
       volumes:
         - name: secrets-store-inline
           csi:
-            driver: secrets-store.csi.x-k8s.io
+            driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
               secretProviderClass: "aws-secrets-provider"
