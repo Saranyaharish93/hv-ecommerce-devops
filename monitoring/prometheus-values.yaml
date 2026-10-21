@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        memory: 1Gi
+    storageSpec:
+      emptyDir: {}
+
+grafana:
+  enabled: false
+
+alertmanager:
+  enabled: false
