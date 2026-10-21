@@ -22,6 +22,9 @@ def create_app(test_config=None):
     from .routes import bp
     app.register_blueprint(bp)
 
+    from .metrics import register_metrics
+    register_metrics(app)
+
     with app.app_context():
         seed_products(app.db)
         seed_admin(app.db)
