@@ -4,10 +4,15 @@ Lumora is a full-stack e-commerce web application built with Python, Flask, and 
 
 This project is designed to demonstrate a realistic engineering lifecycle: build a functional online store, containerize the application, automate validation and security checks, provision cloud infrastructure, and deploy to a Kubernetes-based environment.
 
+> **Master DevOps Documentation**: For deep-dive architectural breakdowns, pipeline stages, Kubernetes manifests, Ansible roles, Prometheus alerts, and FinOps governance, see the comprehensive [DevOps Platform Documentation Suite](devops/README.md).
+
 ---
 
 ## Project Overview
 
+*Direct Artifact Reference: [`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)*
+
+![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
 Lumora is a demo electronics storefront with customer browsing, product discovery, cart and checkout flow, order tracking, newsletter-like contact interactions, and administrative reporting. The repository supports both application development and DevOps execution, making it suitable for showcasing a complete software delivery pipeline.
 
 The project includes:
@@ -24,6 +29,61 @@ The project includes:
 
 ## Objective of the Project
 
+#### 1. 🐙 Source Control & Collaboration
+- **Developer Workflow**: Developers work on feature branches and submit Pull Requests to the `main` branch on GitHub.
+- **Automated Triggers**: GitHub Webhooks trigger the Jenkins declarative pipeline on every push or merged PR.
+
+#### 2. ⚙️ Automation, CI & Security (Jenkins on AWS EC2)
+- **Controller Host**: Jenkins runs on an AWS EC2 instance in a dedicated management security group, fully configured and hardened using **Ansible playbooks** (automating Docker Engine, `kubectl`, AWS CLI, and security tools).
+- **Declarative Pipeline Stages**:
+  1. `Checkout`: Pulls the latest code repository from GitHub.
+  2. `Pytest`: Runs automated unit and functional test suites under `tests/`.
+  3. `Trivy Scan`: Scans application files and container dependencies for security vulnerabilities.
+  4. `Docker BuildKit`: Builds optimized, secure container images with non-root user (`appuser`).
+  5. `Push Image`: Tags images with build numbers and pushes to **Amazon ECR**.
+  6. `Terraform Plan/Apply`: Provisions and manages AWS VPC, subnets, and EKS resources with remote state locking.
+  7. `Ansible`: Manages host configurations idempotently.
+  8. `Deploy to EKS`: Applies rolling updates to Kubernetes workloads using `kubectl`.
+
+#### 3. 📦 Artifacts & IaC State Management
+- **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-flask`).
+- **Amazon S3 & DynamoDB**: Provides secure remote state storage and state locking for Terraform to enable seamless team collaboration.
+
+#### 4. 🌐 AWS Production Network (VPC `10.0.0.0/16`)
+- **Multi-AZ Resilience**: Network resources are distributed across **Availability Zone A** and **Availability Zone B**.
+- **Public Subnets (`10.0.1.0/24`, `10.0.2.0/24`)**:
+  - **Internet Gateway (IGW)** for external inbound/outbound connectivity.
+  - **Dual-AZ NAT Gateways** providing secure outbound internet access for private workloads.
+  - **AWS Application Load Balancer (ALB)** handling TLS/HTTPS termination on port `443`.
+  - **Jenkins EC2 / Bastion Host**.
+- **Private Subnets (`10.0.11.0/24`, `10.0.12.0/24`)**:
+  - Isolated from direct public internet exposure.
+  - Hosts **EKS Managed Node Groups** and all application/database pods.
+
+#### 5. ☸️ Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
+- **ALB Ingress Controller**: Routes incoming external traffic to the internal `lumora-app-service` (ClusterIP: `5000`).
+- **Flask Application Deployment**:
+  - Multi-replica Python 3.12 Flask app running behind **Gunicorn**.
+  - Configured with `readinessProbe` and `livenessProbe` monitoring `/health`.
+  - Scaled dynamically (2 to 10 replicas) using the **Horizontal Pod Autoscaler (HPA)** based on CPU/memory utilization.
+  - Environment configuration managed via Kubernetes `ConfigMap` and secrets via `Kubernetes Secrets`.
+- **Database Workload (MongoDB 7.0)**:
+  - Deployed as a dedicated `MongoDB StatefulSet` in the private subnet.
+  - Internal communication via `mongo-service` (ClusterIP: `27017`) — completely isolated from public access.
+  - Data persistence guaranteed using **PersistentVolumeClaim (PVC)** bound to high-performance **Amazon EBS `gp3` volumes** via the **AWS EBS CSI Driver**.
+
+#### 6. 📊 Observability, Alerting & Operations
+- **Prometheus**: Time Series Database scraping metrics on a 15-second interval from:
+  - `Flask App (/metrics)` & `Flask App (/health)`
+  - `node-exporter (/metrics)` on EC2 worker nodes
+  - `kube-state-metrics (/metrics)` for pod, deployment, and cluster health
+- **Grafana**: Visualizes real-time performance dashboards:
+  - **Application KPI Dashboard**: HTTP request rate, response latency, order transactions, error rates.
+  - **Infrastructure Dashboard**: Node CPU/RAM utilization, pod restart counts, disk I/O.
+- **Alertmanager & Incident Management**:
+  - Triggers operational alerts on latency thresholds, pod crash loops, and resource exhaustion.
+  - Routes notifications to **Slack**, **Email**, and **PagerDuty**.
+  - Integrates Jenkins pipeline build failure notifications.
 The objective of this capstone is to implement an end-to-end DevOps workflow for a real-world application. The project moves from app development and source control to containerization, infrastructure as code, automation, deployment orchestration, and monitoring.
 
 It demonstrates how the following work together in practice:
@@ -431,6 +491,14 @@ For local demonstration, the application creates an admin user automatically if 
 
 Default values:
 
+- [x] Architecture diagram
+- [ ] CI/CD architecture
+- [ ] Deployment screenshots
+- [ ] Monitoring screenshots
+- [ ] Security scan evidence
+- [ ] Project documentation
+- [ ] Final presentation
+- [ ] Project evaluation & demonstration
 ```text
 ADMIN_EMAIL=admin@lumora.local
 ADMIN_PASSWORD=Admin@123
