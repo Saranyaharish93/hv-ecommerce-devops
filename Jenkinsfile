@@ -8,6 +8,7 @@ pipeline {
         ECR_REGISTRY       = '759530261212.dkr.ecr.us-east-1.amazonaws.com'
         ECR_REPOSITORY     = 'lumora-ecommerce-flask'
         IMAGE_TAG          = "${env.BUILD_NUMBER ?: 'latest'}"
+        INFRACOST_CLI_ORG  = 'hv-ecommerce-devops-pipeline'
     }
 
     options {
@@ -108,9 +109,10 @@ pipeline {
                                         echo "Injecting Infracost v2 authentication tokens..."
                                         export INFRACOST_API_KEY="${INFRACOST_API_KEY}"
                                         export INFRACOST_CLI_AUTHENTICATION_TOKEN="${INFRACOST_API_KEY}"
+                                        export INFRACOST_CLI_ORG="${INFRACOST_CLI_ORG:-hv-ecommerce-devops-pipeline}"
                                         
                                         echo "Running Infracost v2 cost estimation..."
-                                        timeout 45s infracost scan . > ../infracost-report.txt 2>&1 || \
+                                        timeout 45s infracost scan . --org "${INFRACOST_CLI_ORG}" > ../infracost-report.txt 2>&1 || \
                                         echo "Notice: Infracost scan timed out or key invalid, proceeding."
                                         
                                         if [ -f ../infracost-report.txt ]; then
