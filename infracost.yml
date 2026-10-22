@@ -1,0 +1,9 @@
+version: 0.1
+
+projects:
+  - path: terraform
+    name: aws-infrastructure
+    terraform_var_files:
+      - terraform.tfvars
+  - path: k8s
+    name: kubernetes-workloads

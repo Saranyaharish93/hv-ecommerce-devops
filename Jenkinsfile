@@ -98,34 +98,32 @@ pipeline {
                                 variable: 'INFRACOST_API_KEY'
                             )
                         ]) {
-                            dir("${env.TF_DIR}") {
-                                sh '''
-                                    export INFRACOST_NO_COLOR=true
-                                    export INFRACOST_SKIP_UPDATE_CHECK=true
-                                    export CI=true
-                                    export INFRACOST_CI=true
+                            sh '''
+                                export INFRACOST_NO_COLOR=true
+                                export INFRACOST_SKIP_UPDATE_CHECK=true
+                                export CI=true
+                                export INFRACOST_CI=true
+                                
+                                if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
+                                    echo "Injecting Infracost v2 authentication tokens..."
+                                    export INFRACOST_API_KEY="${INFRACOST_API_KEY}"
+                                    export INFRACOST_CLI_AUTHENTICATION_TOKEN="${INFRACOST_API_KEY}"
+                                    export INFRACOST_CLI_ORG="${INFRACOST_CLI_ORG:-thiagarajan-b}"
                                     
-                                    if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
-                                        echo "Injecting Infracost v2 authentication tokens..."
-                                        export INFRACOST_API_KEY="${INFRACOST_API_KEY}"
-                                        export INFRACOST_CLI_AUTHENTICATION_TOKEN="${INFRACOST_API_KEY}"
-                                        export INFRACOST_CLI_ORG="${INFRACOST_CLI_ORG:-thiagarajan-b}"
-                                        
-                                        echo "Running Infracost v2 cost estimation..."
-                                        timeout 45s infracost scan . --org "${INFRACOST_CLI_ORG}" > ../infracost-report.txt 2>&1 || \
-                                        echo "Notice: Infracost scan timed out or key invalid, proceeding."
-                                        
-                                        # Append detailed resource cost breakdown table to the archived report
-                                        infracost inspect --group-by resource >> ../infracost-report.txt 2>&1 || true
-                                        
-                                        if [ -f ../infracost-report.txt ]; then
-                                            cat ../infracost-report.txt
-                                        fi
-                                    else
-                                        echo "Notice: Valid INFRACOST_API_KEY not configured. Skipping."
+                                    echo "Running Infracost v2 multi-project scan (Terraform + Kubernetes)..."
+                                    timeout 60s infracost scan --org "${INFRACOST_CLI_ORG}" > infracost-report.txt 2>&1 || \
+                                    echo "Notice: Infracost scan timed out or key invalid, proceeding."
+                                    
+                                    # Append filtered resource cost breakdown (> $0.5 only)
+                                    infracost inspect --group-by resource --min-cost 0.5 >> infracost-report.txt 2>&1 || true
+                                    
+                                    if [ -f infracost-report.txt ]; then
+                                        cat infracost-report.txt
                                     fi
-                                '''
-                            }
+                                else
+                                    echo "Notice: Valid INFRACOST_API_KEY not configured. Skipping."
+                                fi
+                            '''
 
                             if (fileExists('infracost-report.txt')) {
                                 archiveArtifacts artifacts: 'infracost-report.txt',
