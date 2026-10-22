@@ -101,15 +101,25 @@ pipeline {
                                 sh '''
                                     export INFRACOST_NO_COLOR=true
                                     export INFRACOST_SKIP_UPDATE_CHECK=true
+                                    export CI=true
+                                    export INFRACOST_CI=true
                                     
-                                    # If key exists and is non-empty, pass it explicitly; timeout after 20s so it can never hang
                                     if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
+                                        echo "Configuring Infracost API key from Jenkins credentials..."
+                                        export INFRACOST_API_KEY="${INFRACOST_API_KEY}"
+                                        export INFRACOST_CLI_AUTHENTICATION_TOKEN="${INFRACOST_API_KEY}"
+                                        
+                                        # Save key directly to ~/.config/infracost/credentials.yml so CLI never prompts for interactive web login
+                                        infracost configure set api_key "${INFRACOST_API_KEY}" || true
+                                        
                                         echo "Running Infracost cost estimation..."
-                                        timeout 20s infracost breakdown \
-                                            --api-key "${INFRACOST_API_KEY}" \
+                                        timeout 45s infracost breakdown \
                                             --path . \
                                             --format table \
-                                            --out-file ../infracost-report.txt || echo "Notice: Infracost scan timed out or key invalid, proceeding."
+                                            --out-file ../infracost-report.txt || \
+                                        timeout 45s infracost scan \
+                                            --path . > ../infracost-report.txt || \
+                                        echo "Notice: Infracost scan timed out or key invalid, proceeding."
                                         
                                         if [ -f ../infracost-report.txt ]; then
                                             cat ../infracost-report.txt
