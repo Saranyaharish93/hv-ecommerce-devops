@@ -105,20 +105,12 @@ pipeline {
                                     export INFRACOST_CI=true
                                     
                                     if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
-                                        echo "Configuring Infracost API key from Jenkins credentials..."
+                                        echo "Injecting Infracost v2 authentication tokens..."
                                         export INFRACOST_API_KEY="${INFRACOST_API_KEY}"
                                         export INFRACOST_CLI_AUTHENTICATION_TOKEN="${INFRACOST_API_KEY}"
                                         
-                                        # Save key directly to ~/.config/infracost/credentials.yml so CLI never prompts for interactive web login
-                                        infracost configure set api_key "${INFRACOST_API_KEY}" || true
-                                        
-                                        echo "Running Infracost cost estimation..."
-                                        timeout 45s infracost breakdown \
-                                            --path . \
-                                            --format table \
-                                            --out-file ../infracost-report.txt || \
-                                        timeout 45s infracost scan \
-                                            --path . > ../infracost-report.txt || \
+                                        echo "Running Infracost v2 cost estimation..."
+                                        timeout 45s infracost scan . > ../infracost-report.txt 2>&1 || \
                                         echo "Notice: Infracost scan timed out or key invalid, proceeding."
                                         
                                         if [ -f ../infracost-report.txt ]; then
