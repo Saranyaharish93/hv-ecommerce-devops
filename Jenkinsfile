@@ -115,6 +115,9 @@ pipeline {
                                         timeout 45s infracost scan . --org "${INFRACOST_CLI_ORG}" > ../infracost-report.txt 2>&1 || \
                                         echo "Notice: Infracost scan timed out or key invalid, proceeding."
                                         
+                                        # Append detailed resource cost breakdown table to the archived report
+                                        infracost inspect --group-by resource >> ../infracost-report.txt 2>&1 || true
+                                        
                                         if [ -f ../infracost-report.txt ]; then
                                             cat ../infracost-report.txt
                                         fi
@@ -184,23 +187,20 @@ pipeline {
             steps {
                 echo 'Executing automated unit tests...'
                 sh '''
+                    # Create and activate an isolated virtual environment
+                    if [ ! -d ".venv" ]; then
+                        python3 -m venv .venv || virtualenv .venv || true
+                    fi
+
                     if [ -f .venv/bin/activate ]; then
                         . .venv/bin/activate
-                    fi
-
-                    # Install test dependencies if pip is available
-                    if command -v pip3 >/dev/null 2>&1; then
-                        pip3 install --user -r requirements.txt pytest || true
-                    fi
-
-                    # Run pytest if installed, or fallback to python3 -m unittest
-                    if command -v pytest >/dev/null 2>&1; then
+                        pip install --no-cache-dir -r requirements.txt
                         pytest tests/ -v
-                    elif python3 -m pytest --version >/dev/null 2>&1; then
-                        python3 -m pytest tests/ -v
                     else
-                        echo "Running tests via python3 unittest framework..."
-                        python3 -m unittest discover -s tests -p "test_*.py" -v || true
+                        # Fallback if venv is unavailable
+                        pip3 install --user --break-system-packages -r requirements.txt || true
+                        export PATH="$HOME/.local/bin:$PATH"
+                        pytest tests/ -v || python3 -m unittest discover -s tests -p "test_*.py" -v
                     fi
                 '''
             }
