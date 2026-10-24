@@ -1,0 +1,119 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lumora-application-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: lumora.infrastructure.alerts
+      rules:
+        - alert: EKSNodeHighCPU
+          expr: |
+            100 * (
+              1 - avg by (instance) (
+                rate(node_cpu_seconds_total{
+                  mode="idle"
+                }[5m])
+              )
+            ) > 80
+          for: 5m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "High CPU usage on {{ $labels.instance }}"
+            description: "Node CPU utilization has exceeded 80% for 5 minutes."
+
+        - alert: EKSNodeHighMemory
+          expr: |
+            100 * (
+              1 -
+              node_memory_MemAvailable_bytes
+              /
+              node_memory_MemTotal_bytes
+            ) > 85
+          for: 5m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "High memory usage on {{ $labels.instance }}"
+            description: "Node memory utilization has exceeded 85% for 5 minutes."
+
+        - alert: FlaskPodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="lumora-prod",
+              pod=~"flask-app-.*",
+              condition="true"
+            } == 0
+          for: 2m
+          labels:
+            severity: critical
+            project: lumora
+          annotations:
+            summary: "Flask pod {{ $labels.pod }} is not ready"
+            description: "The Flask application pod has remained unready for 2 minutes."
+
+        - alert: FlaskFrequentRestarts
+          expr: |
+            increase(
+              kube_pod_container_status_restarts_total{
+                namespace="lumora-prod",
+                container="lumora-ecommerce"
+              }[15m]
+            ) > 3
+          for: 2m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "Frequent restarts for {{ $labels.pod }}"
+            description: "The Flask container has restarted more than 3 times in 15 minutes."
+
+        - alert: FlaskApplicationDown
+          expr: |
+            (
+              up{
+                namespace="lumora-prod",
+                service="flask-service"
+              } == 0
+            )
+            or
+            (
+              absent(
+                up{
+                  namespace="lumora-prod",
+                  service="flask-service"
+                }
+              )
+            )
+          for: 2m
+          labels:
+            severity: critical
+            project: lumora
+          annotations:
+            summary: "Flask application metrics target unavailable"
+            description: "The Flask service metrics target is down or missing for 2 minutes."
+
+        - alert: FlaskDeploymentUnhealthy
+          expr: |
+            kube_deployment_spec_replicas{
+              namespace="lumora-prod",
+              deployment="flask-app"
+            }
+            >
+            kube_deployment_status_replicas_available{
+              namespace="lumora-prod",
+              deployment="flask-app"
+            }
+          for: 3m
+          labels:
+            severity: critical
+            project: lumora
+          annotations:
+            summary: "Flask Deployment has unavailable replicas"
+            description: "Available Flask replicas are below the desired replica count for 3 minutes."

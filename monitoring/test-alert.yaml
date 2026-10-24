@@ -1,0 +1,22 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lumora-test-alert
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: lumora.test.alerts
+      rules:
+        - alert: LumoraTestAlert
+          expr: vector(1)
+          for: 1m
+          labels:
+            severity: warning
+            project: lumora
+            purpose: testing
+          annotations:
+            summary: "Lumora monitoring test alert"
+            description: "Temporary alert to verify Prometheus alert evaluation."
