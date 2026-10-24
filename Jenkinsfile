@@ -280,16 +280,54 @@ pipeline {
         }
     }
 
-   post {
+   
+post {
     always {
         echo 'Pipeline execution completed.'
+    }
+
+    success {
+        echo 'Jenkins pipeline completed successfully!'
+
+        emailext(
+            to: '${DEFAULT_RECIPIENTS}',
+            subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            mimeType: 'text/html',
+            body: """
+                <h2>Deployment Successful</h2>
+                <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                <p><b>Status:</b> SUCCESS</p>
+                <p><b>Pipeline URL:</b>
+                    <a href="${env.BUILD_URL}">${env.BUILD_URL}</a>
+                </p>
+            """
+        )
+    }
+
+    failure {
+        echo 'Jenkins pipeline failed!'
+
+        emailext(
+            to: '${DEFAULT_RECIPIENTS}',
+            subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            mimeType: 'text/html',
+            body: """
+                <h2>Deployment Failed</h2>
+                <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                <p><b>Status:</b> FAILURE</p>
+                <p><b>Pipeline URL:</b>
+                    <a href="${env.BUILD_URL}">${env.BUILD_URL}</a>
+                </p>
+                <p>Please check Jenkins console output.</p>
+            """
+        )
+    }
+
+    cleanup {
         deleteDir()
     }
-    success {
-        echo 'Terraform Jenkins Pipeline executed successfully!'
-    }
-    failure {
-        echo 'Pipeline failed. Check build logs for diagnostic details.'
-    }
 }
+
 }
