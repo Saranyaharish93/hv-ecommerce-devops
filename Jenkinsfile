@@ -278,9 +278,39 @@ pipeline {
                 '''
             }
         }
+
+        stage('Post-Deployment Health Check') {
+            when {
+                expression {
+                    return sh(
+                        script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                        returnStatus: true
+                    ) == 0
+                }
+            }
+            steps {
+                sh '''
+                    set -eu
+                    echo "Checking Flask application health in EKS..."
+                    kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
+                    kubectl run "health-check-${BUILD_NUMBER}" \
+                      -n lumora-prod \
+                      --image=curlimages/curl:8.11.1 \
+                      --restart=Never \
+                      --rm -i \
+                      --pod-running-timeout=120s \
+                      --command -- \
+                      curl --fail --silent --show-error \
+                      --retry 5 \
+                      --retry-delay 3 \
+                      --max-time 10 \
+                      http://flask-service.lumora-prod.svc.cluster.local/health
+                    echo "Application health verification PASSED."
+                '''
+            }
+        }
     }
 
-   
 post {
     always {
         echo 'Pipeline execution completed.'
