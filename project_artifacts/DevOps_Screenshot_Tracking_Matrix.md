@@ -34,10 +34,11 @@ project_artifacts/screenshots/
 │   └── 05_alb_ingress_storefront.png
 ├── monitoring/
 │   ├── 01_metrics_server_nodes.png
-│   ├── 02_prometheus_targets_up.png
+│   ├── 02_prometheus_targets_up.png (Prometheus_targethealth.png)
 │   ├── 03_grafana_app_kpi.png
-│   ├── 04_grafana_cluster_infra.png
-│   └── 05_alertmanager_notification.png
+│   ├── 04_grafana_cluster_infra.png (Grafana_dashboard.png)
+│   ├── 05_alertmanager_notification.png (Prometheus_alerts.png)
+│   └── Grafana_homepage.png
 └── security_finops/
     ├── 01_infracost_report_jenkins.png
     ├── 02_trivy_scan_output.png
@@ -64,8 +65,8 @@ project_artifacts/screenshots/
 | **SS-10** | [ ] | Horizontal Pod Autoscaler Active & Reporting | `devops/kubernetes.md` (Section 6) | `project_artifacts/screenshots/kubernetes/04_hpa_active_metrics.png` |
 | **SS-11** | [ ] | AWS Secrets Manager Configuration | `devops/terraform.md` (Section 6) | `project_artifacts/screenshots/terraform/03_secrets_manager_entry.png` |
 | **SS-12** | [ ] | Application Storefront Live via Ingress ALB | `devops/kubernetes.md` (Section 7) | `project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png` |
-| **SS-13** | [ ] | Prometheus Server Targets Scraping Health | `devops/monitoring.md` (Section 3) | `project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png` |
-| **SS-14** | [ ] | Grafana Application and Node KPI Dashboard | `devops/monitoring.md` (Section 4) | `project_artifacts/screenshots/monitoring/03_grafana_app_kpi.png` |
+| **SS-13** | [x] | Prometheus Server Targets Scraping Health | `devops/monitoring.md` (Section 5.1) | `project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png` |
+| **SS-14** | [x] | Grafana Application and Node KPI Dashboard | `devops/monitoring.md` (Section 7.1) | `project_artifacts/screenshots/monitoring/04_grafana_cluster_infra.png` |
 | **SS-15** | [ ] | AWS Budgets Console Spending & Forecast | `devops/terraform.md` (Section 6) | `project_artifacts/screenshots/terraform/04_aws_budgets_dashboard.png` |
 
 ---
@@ -116,10 +117,10 @@ project_artifacts/screenshots/
 | Ref ID | Status | Concept Demonstrated | Section Reference | Target Image File Path |
 | :---: | :---: | :--- | :--- | :--- |
 | **MON-01**| [ ] | Kubernetes Metrics Server Running | Section 2 (Metrics Server Bootstrap) | `project_artifacts/screenshots/monitoring/01_metrics_server_nodes.png` |
-| **MON-02**| [ ] | Prometheus Scrape Targets Healthy | Section 3 (Prometheus Architecture) | `project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png` |
-| **MON-03**| [ ] | Grafana Application KPI Visuals | Section 4.1 (Application KPI Dashboard) | `project_artifacts/screenshots/monitoring/03_grafana_app_kpi.png` |
-| **MON-04**| [ ] | Grafana Node Saturation Visuals | Section 4.2 (Infrastructure Dashboard) | `project_artifacts/screenshots/monitoring/04_grafana_cluster_infra.png` |
-| **MON-05**| [ ] | Alertmanager Fired Notification | Section 5 (Alertmanager Routing) | `project_artifacts/screenshots/monitoring/05_alertmanager_notification.png` |
+| **MON-02**| [x] | Prometheus Scrape Targets Healthy | Section 5.1 (Target Scraping Verification) | `project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png` |
+| **MON-03**| [ ] | Grafana Application KPI Visuals | Section 7.1 (Application KPI Dashboard) | `project_artifacts/screenshots/monitoring/03_grafana_app_kpi.png` |
+| **MON-04**| [x] | Grafana Node Saturation Visuals | Section 7.1 (Infrastructure Dashboard) | `project_artifacts/screenshots/monitoring/04_grafana_cluster_infra.png` |
+| **MON-05**| [x] | Alertmanager / Prometheus Alert Rules | Section 6.1 (Alerts Live Verification) | `project_artifacts/screenshots/monitoring/05_alertmanager_notification.png` |
 
 ### 3.6. Shift-Left Security & FinOps Governance (`devops/security-and-finops.md`)
 

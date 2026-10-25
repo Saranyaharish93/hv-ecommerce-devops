@@ -1,9 +1,9 @@
 # Lumora E-Commerce DevOps Capstone
 
 [![Production Storefront](https://img.shields.io/badge/Live%20Storefront-lumora.thiagarajanb.dpdns.org-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://lumora.thiagarajanb.dpdns.org/)
-[![AWS EKS](https://img.shields.io/badge/Kubernetes-AWS%20EKS%20v1.30-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](devops/kubernetes.md)
+[![AWS EKS](https://img.shields.io/badge/Kubernetes-AWS%20EKS%20v1.36-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](devops/kubernetes.md)
 [![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%2016--Stage-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
-[![Terraform](https://img.shields.io/badge/IaC-Terraform%20v1.5+-7B42BC?style=flat-square&logo=terraform&logoColor=white)](devops/terraform.md)
+[![Terraform](https://img.shields.io/badge/IaC-Terraform%20v1.8+-7B42BC?style=flat-square&logo=terraform&logoColor=white)](devops/terraform.md)
 [![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)](devops/ansible.md)
 [![Status](https://img.shields.io/badge/Capstone%20Status-100%25%20Completed-brightgreen?style=flat-square)](devops/README.md)
 
@@ -56,7 +56,7 @@ The project includes:
 
 #### 3. Artifacts & IaC State Management
 - **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-flask`).
-- **Amazon S3 & DynamoDB**: Provides secure remote state storage and state locking for Terraform to enable seamless team collaboration.
+- **Amazon S3 Native State Locking (`use_lockfile = true`)**: Provides secure AES-256 encrypted remote state storage with atomic conditional-write concurrency locking in S3 (eliminating auxiliary DynamoDB table overhead and cost).
 
 #### 4. AWS Production Network (VPC `10.0.0.0/16`)
 - **Multi-AZ Resilience**: Network resources are distributed across **Availability Zone A** and **Availability Zone B**.
@@ -70,19 +70,19 @@ The project includes:
   - Hosts **EKS Managed Node Groups** and all application/database pods.
 
 #### 5. Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
-- **ALB Ingress Controller**: Routes incoming external traffic to the internal `lumora-app-service` (ClusterIP: `5000`).
+- **ALB Ingress Controller**: Routes incoming external traffic to the internal `flask-service` (targetPort: `5000`).
 - **Flask Application Deployment**:
   - Multi-replica Python 3.12 Flask app running behind **Gunicorn**.
   - Configured with `readinessProbe` and `livenessProbe` monitoring `/health`.
-  - Scaled dynamically (2 to 10 replicas) using the **Horizontal Pod Autoscaler (HPA)** based on CPU/memory utilization.
-  - Environment configuration managed via Kubernetes `ConfigMap` and secrets via `Kubernetes Secrets`.
+  - Scaled dynamically (2 to 5 replicas) using the **Horizontal Pod Autoscaler (HPA v2)** based on CPU (70%) and memory (80%) utilization.
+  - Environment configuration managed via Kubernetes `ConfigMap` and secrets via `Kubernetes Secrets` / `AWS Secrets Store CSI`.
 - **Database Workload (MongoDB 7.0)**:
-  - Deployed as a dedicated `MongoDB StatefulSet` in the private subnet.
-  - Internal communication via `mongo-service` (ClusterIP: `27017`) — completely isolated from public access.
+  - Deployed as a dedicated `MongoDB StatefulSet` (`mongodb-0`) in the private subnet.
+  - Internal communication via `mongodb-service` (ClusterIP: None) — completely isolated from public access.
   - Data persistence guaranteed using **PersistentVolumeClaim (PVC)** bound to high-performance **Amazon EBS `gp3` volumes** via the **AWS EBS CSI Driver**.
 
 #### 6. Observability, Alerting & Operations
-- **Prometheus**: Time Series Database scraping metrics on a 15-second interval from:
+- **Prometheus**: Time Series Database scraping metrics on a 30-second interval from:
   - `Flask App (/metrics)` & `Flask App (/health)`
   - `node-exporter (/metrics)` on EC2 worker nodes
   - `kube-state-metrics (/metrics)` for pod, deployment, and cluster health
@@ -90,9 +90,9 @@ The project includes:
   - **Application KPI Dashboard**: HTTP request rate, response latency, order transactions, error rates.
   - **Infrastructure Dashboard**: Node CPU/RAM utilization, pod restart counts, disk I/O.
 - **Alertmanager & Incident Management**:
-  - Triggers operational alerts on latency thresholds, pod crash loops, and resource exhaustion.
-  - Routes notifications to **Slack**, **Email**, and **PagerDuty**.
+  - Triggers operational alerts on latency thresholds, pod crash loops, and resource exhaustion (`monitoring/application-alerts.yaml`).
   - Integrates Jenkins pipeline build failure notifications.
+
 The objective of this capstone is to implement an end-to-end DevOps workflow for a real-world application. The project moves from app development and source control to containerization, infrastructure as code, automation, deployment orchestration, and monitoring.
 
 It demonstrates how the following work together in practice:
@@ -103,7 +103,7 @@ It demonstrates how the following work together in practice:
 - Provisioning with Terraform
 - Automation with Ansible
 - Deployment with Kubernetes
-- Monitoring with Prometheus and Grafana concepts
+- Monitoring with Prometheus and Grafana
 
 ---
 
@@ -221,22 +221,22 @@ The application stores data for:
 
 ### Application layer
 - Python 3.12
-- Flask
-- MongoDB
+- Flask 3.1.1
+- MongoDB 7.0 Community
 - Jinja2 templates
 - HTML5, CSS3, JavaScript
-- Gunicorn
+- Gunicorn 23.0.0
 - ReportLab for PDF invoice generation
 
 ### DevOps and infrastructure layer
-- Docker
+- Docker & Docker BuildKit (26.x Engine)
 - Docker Compose
-- Jenkins
-- Terraform
-- Ansible
-- Kubernetes manifests
+- Jenkins LTS (2.452+)
+- Terraform (v1.8+)
+- Ansible (2.16+ Core)
+- Kubernetes manifests (EKS v1.36)
 - AWS deployment patterns and infrastructure modules
-- Monitoring and observability assets (Prometheus/Grafana references)
+- Monitoring and observability assets (Prometheus metrics scraping, alert rules, and Grafana dashboards)
 
 ---
 
@@ -295,12 +295,17 @@ hv-ecommerce-devops/
 │   ├── 05-service-ingress.yml
 │   └── kustomization.yml
 ├── monitoring/
-│   ├── alertmanager/
-│   └── prometheus/
+│   ├── application-alerts.yaml
+│   ├── grafana-application-dashboard.json
+│   ├── grafana-infrastructure-dashboard.json
+│   ├── grafana-values.yaml
+│   └── prometheus-values.yaml
 ├── project_artifacts/
 │   ├── Lumora_E-Commerce_Architecture_v3.png
 │   ├── Capstone_Task_Execution_Roadmap.md
 │   ├── DevOps_Capstone_Viva_Preparation_Guide.md
+│   ├── DevOps_Screenshot_Tracking_Matrix.md
+│   ├── Kubernetes_Quick_Reference_CheatSheet.md
 │   ├── Implementation_Plan_Sprint2_Jenkins_Automation.md
 │   ├── Jenkinsfile
 │   ├── Project_Sprints.txt

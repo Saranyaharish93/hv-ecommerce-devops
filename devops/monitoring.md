@@ -134,6 +134,12 @@ alertmanager:
 - **Resource Limits (1Gi)**: Enforces memory boundaries to prevent the monitoring agent from triggering node OOM conditions.
 - **Retention (2d)**: Right-sized for capstone execution and sprint demonstrations without exhausting EBS disk capacity.
 
+### 5.1. Prometheus Target Scraping Verification
+
+The screenshot below validates the Prometheus web console (`/targets`) actively scraping the Flask e-commerce application (`flask-app-monitor/0` across healthy endpoints on port 5000) and the Grafana service in the `UP (2/2)` state:
+
+![Prometheus Target Health](../project_artifacts/screenshots/monitoring/Prometheus_targethealth.png)
+
 ---
 
 ## 6. PrometheusRule Alerting Definitions as Code
@@ -214,6 +220,12 @@ spec:
             description: "The Flask service metrics target is down or missing for 2 minutes."
 ```
 
+### 6.1. Prometheus Alerts Live Verification
+
+The screenshot below validates the loaded `lumora.infrastructure.alerts` rule group in the Prometheus web console (`/alerts`), confirming real-time evaluation of `EKSNodeHighCPU`, `EKSNodeHighMemory`, `FlaskPodNotReady`, `FlaskFrequentRestarts`, `FlaskApplicationDown`, and `FlaskDeploymentUnhealthy`:
+
+![Prometheus Active Alert Rules](../project_artifacts/screenshots/monitoring/Prometheus_alerts.png)
+
 ---
 
 ## 7. Grafana Dashboards Codified in JSON
@@ -224,3 +236,11 @@ Rather than configuring dashboards manually via point-and-click UI, all Grafana 
   - Visualizes HTTP throughput (RPS), P95 response latency, status code distributions (2xx vs 5xx), and revenue analytics.
 - **Cluster & Node Infrastructure Dashboard**: [`monitoring/grafana-infrastructure-dashboard.json`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/monitoring/grafana-infrastructure-dashboard.json)
   - Tracks EKS worker node CPU/RAM saturation, pod memory limits, EBS disk I/O on `mongodb-0`, and active HPA pod scaling curves.
+
+### 7.1. Grafana Console & Live Infrastructure Dashboard Verification
+
+The captures below demonstrate the Grafana web console homepage and the live Kubernetes compute resources dashboard monitoring EKS node CPU capacity, pod CPU allocation quotas, and memory consumption on `ip-10-0-54-45.ec2.internal`:
+
+| ![Grafana Web UI Homepage](../project_artifacts/screenshots/monitoring/Grafana_homepage.png) | ![Grafana Node & Pod Infrastructure Dashboard](../project_artifacts/screenshots/monitoring/Grafana_dashboard.png) |
+| :---: | :---: |
+| **Grafana Web Console Homepage** (`http://localhost:3000`) | **Kubernetes Compute Resources (Node & Pods)** |

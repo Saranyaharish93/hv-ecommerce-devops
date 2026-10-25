@@ -40,7 +40,7 @@ The platform integrates industry-standard tools across every phase of the softwa
 | **Security Scanning** | Trivy | High/Critical Severity | Automated static analysis and image vulnerability scanning in CI pipeline |
 | **Shift-Left FinOps** | Infracost CLI | Non-blocking Breakdown | Automated infrastructure monthly cost estimation during `terraform plan` |
 | **Cost Governance** | AWS Budgets | $25/month threshold alarms| Real-time spend tracking with multi-tier email alerts at 80% and 100% |
-| **Observability (Planned)**| Prometheus & Grafana | kube-prometheus-stack | Cluster metrics scraping, resource saturation monitoring, and KPI dashboards |
+| **Observability & Monitoring**| Prometheus & Grafana | kube-prometheus-stack | Cluster metrics scraping, resource saturation monitoring, and KPI dashboards |
 
 ---
 
@@ -179,5 +179,3 @@ For comprehensive technical specifications, implementation details, and role-spe
 - [Kubernetes Workloads, EKS Orchestration & CSI Secrets](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/kubernetes.md)
 - [Observability, Prometheus, Grafana & Metrics Server](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/monitoring.md)
 - [Shift-Left Security (DevSecOps) & FinOps Cost Governance](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/security-and-finops.md)
-
-
