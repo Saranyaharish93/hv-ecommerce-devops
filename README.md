@@ -537,59 +537,6 @@ The `project_artifacts/` directory stores architecture diagrams, sprint planning
 
 ---
 
-## Capstone Roadmap Status
-
-This repository follows a staged DevOps capstone roadmap covering the key phases of the project lifecycle. All 6 planned sprints and production deployment milestones are **100% implemented and verified**.
-
-### Implemented & Verified Milestones
-- **Sprint 1 — Core App & Dockerization**: Flask storefront, MongoDB integration, containerization, multi-stage Docker build, and Docker Compose orchestration.
-- **Sprint 2 — CI/CD Automation**: 16-stage Jenkins Declarative Pipeline with SonarQube quality gates, Trivy CVE vulnerability scanning, and Docker BuildKit push to Amazon ECR.
-- **Sprint 3 — Infrastructure as Code (IaC)**: Modular Terraform provisioning for Multi-AZ VPC (`10.0.0.0/16`), public/private subnets, NAT Gateways, ECR, and Amazon EKS cluster with S3 & DynamoDB remote state locking.
-- **Sprint 4 — Configuration Management**: Ansible roles and playbooks for automated, idempotent Jenkins controller and worker node configuration.
-- **Sprint 5 — Kubernetes Orchestration & Scaling**: Production manifests for `lumora-prod`, MongoDB StatefulSet with AWS EBS `gp3` CSI storage, Flask Deployment with liveness/readiness probes, HPA autoscaling (2 to 10 replicas), and AWS Application Load Balancer Ingress with Cloudflare Flexible SSL.
-- **Sprint 6 — Observability & FinOps**: Prometheus time-series metrics, Alertmanager incident notification rules, Infracost automated pull request cost estimation, and comprehensive platform documentation.
-
-See the planning documents here:
-- `project_artifacts/Capstone_Task_Execution_Roadmap.md`
-- `project_artifacts/Project_Sprints.txt`
-
----
-
-## Demo Admin Account
-
-For local demonstration, the application creates an admin user automatically if it does not already exist.
-
-Default values:
-```text
-ADMIN_EMAIL=admin@lumora.local
-ADMIN_PASSWORD=Admin@123
-```
-
----
-
-## Deliverables & Capstone Completion Status
-
-- [x] Architecture diagram (`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`)
-- [x] CI/CD architecture & 16-stage pipeline (`devops/jenkins.md`, `Jenkinsfile`)
-- [x] Deployment screenshots & visual proofs (`project_artifacts/screenshots/`)
-- [x] Monitoring dashboards & Prometheus alerting rules (`monitoring/`)
-- [x] Security scan evidence (Trivy CVE scans, Infracost FinOps)
-- [x] Comprehensive platform documentation (`devops/README.md`)
-- [x] Final presentation & live storefront endpoint (`https://lumora.thiagarajanb.dpdns.org/`)
-- [x] Project evaluation & viva technical defense guide (`project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md`)
-
----
-
-## Contributing
-
-- Create feature branches for new work
-- Keep application changes and infrastructure assets aligned
-- Validate changes locally before merging
-- Prefer small, well-documented PRs
-- Use the project artifact directory for architecture and sprint records
-
----
-
 ## License
 
 This project is intended for educational and capstone demonstration use.
