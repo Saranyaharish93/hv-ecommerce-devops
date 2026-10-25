@@ -12,9 +12,9 @@ Lumora is a full-stack e-commerce web application built with Python, Flask, and 
 This project is designed to demonstrate a realistic engineering lifecycle: build a functional online store, containerize the application, automate validation and security checks, provision cloud infrastructure, and deploy to a Kubernetes-based environment.
 
 > **Key Presentation & Navigation Links**:
-> - 🌐 **Live Storefront Endpoint**: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)
-> - 📑 **Master DevOps Suite & Presentation**: [DevOps Platform Master Guide](devops/README.md)
-> - 🎓 **Viva Technical Defense Guide**: [DevOps Capstone Viva Prep Guide](project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md)
+> - **Live Storefront Endpoint**: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)
+> - **Master DevOps Suite & Presentation**: [DevOps Platform Master Guide](devops/README.md)
+> - **Viva Technical Defense Guide**: [DevOps Capstone Viva Prep Guide](project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md)
 
 ---
 
@@ -39,11 +39,11 @@ The project includes:
 
 ## Objective of the Project
 
-#### 1. 🐙 Source Control & Collaboration
+#### 1. Source Control & Collaboration
 - **Developer Workflow**: Developers work on feature branches and submit Pull Requests to the `main` branch on GitHub.
 - **Automated Triggers**: GitHub Webhooks trigger the Jenkins declarative pipeline on every push or merged PR.
 
-#### 2. ⚙️ Automation, CI & Security (Jenkins on AWS EC2)
+#### 2. Automation, CI & Security (Jenkins on AWS EC2)
 - **Controller Host**: Jenkins runs on an AWS EC2 instance in a dedicated management security group, fully configured and hardened using **Ansible playbooks** (automating Docker Engine, `kubectl`, AWS CLI, and security tools).
 - **Declarative Pipeline Stages**:
   1. `Checkout`: Pulls the latest code repository from GitHub.
@@ -55,11 +55,11 @@ The project includes:
   7. `Ansible`: Manages host configurations idempotently.
   8. `Deploy to EKS`: Applies rolling updates to Kubernetes workloads using `kubectl`.
 
-#### 3. 📦 Artifacts & IaC State Management
+#### 3. Artifacts & IaC State Management
 - **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-flask`).
 - **Amazon S3 & DynamoDB**: Provides secure remote state storage and state locking for Terraform to enable seamless team collaboration.
 
-#### 4. 🌐 AWS Production Network (VPC `10.0.0.0/16`)
+#### 4. AWS Production Network (VPC `10.0.0.0/16`)
 - **Multi-AZ Resilience**: Network resources are distributed across **Availability Zone A** and **Availability Zone B**.
 - **Public Subnets (`10.0.1.0/24`, `10.0.2.0/24`)**:
   - **Internet Gateway (IGW)** for external inbound/outbound connectivity.
@@ -70,7 +70,7 @@ The project includes:
   - Isolated from direct public internet exposure.
   - Hosts **EKS Managed Node Groups** and all application/database pods.
 
-#### 5. ☸️ Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
+#### 5. Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
 - **ALB Ingress Controller**: Routes incoming external traffic to the internal `lumora-app-service` (ClusterIP: `5000`).
 - **Flask Application Deployment**:
   - Multi-replica Python 3.12 Flask app running behind **Gunicorn**.
@@ -82,7 +82,7 @@ The project includes:
   - Internal communication via `mongo-service` (ClusterIP: `27017`) — completely isolated from public access.
   - Data persistence guaranteed using **PersistentVolumeClaim (PVC)** bound to high-performance **Amazon EBS `gp3` volumes** via the **AWS EBS CSI Driver**.
 
-#### 6. 📊 Observability, Alerting & Operations
+#### 6. Observability, Alerting & Operations
 - **Prometheus**: Time Series Database scraping metrics on a 15-second interval from:
   - `Flask App (/metrics)` & `Flask App (/health)`
   - `node-exporter (/metrics)` on EC2 worker nodes
@@ -108,7 +108,7 @@ It demonstrates how the following work together in practice:
 
 ---
 
-## 📸 Live Storefront & DevOps Implementation Proofs
+## Live Storefront & DevOps Implementation Proofs
 
 ### 1. Live E-Commerce Storefront on AWS EKS & Cloudflare
 *Live Public Endpoint: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)*
@@ -129,9 +129,9 @@ It demonstrates how the following work together in practice:
 | :---: | :---: |
 | ![Jenkins Web Dashboard](project_artifacts/screenshots/jenkins/Jenkins_Homepage.png) | ![Pipeline Stage View](project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png) |
 
-| Shift-Left FinOps Cost Estimation (Infracost) | Idempotent Host Configuration (Ansible) |
+| Shift-Left FinOps Cost Estimation (Infracost) | Shift-Left Container Security (Trivy CVE Scan) |
 | :---: | :---: |
-| ![Infracost Cost Analysis](project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png) | ![Ansible Execution](project_artifacts/screenshots/ansible/01_jenkins_install_success.png) |
+| ![Infracost Cost Analysis](project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png) | ![Trivy Security Scan](project_artifacts/screenshots/jenkins/04_trivy_scan_console.png) |
 
 ---
 
@@ -170,9 +170,13 @@ It demonstrates how the following work together in practice:
 | :---: | :---: |
 | ![Profile](project_artifacts/screenshots/storefront/E-commerce_portal_profilepage.png) | ![Order Journey](project_artifacts/screenshots/storefront/E-commerce_portal_orderjourney-1.png) |
 
-| Customer Support & Inquiries (`/contact`) | Authentication Portal (`/login`) |
+| Customer Support & Inquiries (`/contact`) | Profile Settings & Address Book (`/profile/edit`) |
 | :---: | :---: |
-| ![Contact](project_artifacts/screenshots/storefront/06_contact_page.png) | ![Login](project_artifacts/screenshots/storefront/04_login_page.png) |
+| ![Contact](project_artifacts/screenshots/storefront/06_contact_page.png) | ![Profile Edit](project_artifacts/screenshots/storefront/E-commerce_portal_profileedit.png) |
+
+| Authentication Portal (`/login`) | Custom Domain & SSL Verification |
+| :---: | :---: |
+| ![Login](project_artifacts/screenshots/storefront/04_login_page.png) | ![DNS Mapped SSL](project_artifacts/screenshots/storefront/E-commerce_portal_DNS_mapped-1.png) |
 
 - User registration, session-based authentication, and role-aware access
 - Password reset flow with simulated email tracking
@@ -183,15 +187,24 @@ It demonstrates how the following work together in practice:
 - Order history, detailed order lifecycle tracking, and status updates
 - Responsive UI optimized for desktop, tablet, and mobile displays
 
-### Admin features
-- Admin dashboard with key metrics
-- Product management: add, edit, delete, price and stock updates
-- Image upload support for product listings
-- Customer management and activation toggling
-- Order management and status updates
-- Reports and analytics by revenue and category
-- Low-stock monitoring using a configurable threshold
-- Email outbox and simulated messaging records
+### Admin Features & Back-Office Walkthrough
+
+| Back-Office Analytics & Metric Overview (`/admin`) | Product Catalog Management & Inventory Controls (`/admin/products`) |
+| :---: | :---: |
+| ![Admin Dashboard](project_artifacts/screenshots/storefront/E-commerce_admin_homepage.png) | ![Product Management](project_artifacts/screenshots/storefront/E-commerce_admin_product_management.png) |
+
+| Customer & User Management (`/admin/customers`) | Financial Reports & Revenue Analytics (`/admin/reports`) |
+| :---: | :---: |
+| ![User Management](project_artifacts/screenshots/storefront/E-commerce_admin_user_management.png) | ![Financial Reports Dashboard](project_artifacts/screenshots/storefront/E-commerce_admin_finance_dashboard.png) |
+
+- **Admin dashboard with key metrics**: High-level platform health, total sales revenue, active customer count, order volumes, and real-time operational status.
+- **Product management**: Comprehensive catalog controls allowing administrators to add new items, update prices, manage stock quantities, adjust categories, and delete obsolete listings.
+- **Image upload support**: Secure multi-part image ingestion for product listings and promotional banners.
+- **Customer management and activation toggling**: Administrative oversight of user accounts, email verification status, and one-click account activation/deactivation controls.
+- **Order management and status updates**: End-to-end lifecycle order tracking (Pending, Confirmed, Shipped, Delivered, Cancelled) with automated invoice generation.
+- **Reports and analytics**: Dynamic financial summaries by revenue, date ranges, and sales distribution across catalog categories.
+- **Low-stock monitoring**: Real-time automated alerts highlighting inventory items falling below configurable safety thresholds.
+- **Email outbox & simulated messaging**: Transparent audit ledger of all transactional emails, registration notifications, and simulated password resets dispatched by the backend.
 
 ### Data model
 The application stores data for:

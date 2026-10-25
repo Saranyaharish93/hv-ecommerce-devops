@@ -1,4 +1,4 @@
-# 🗺️ End-to-End DevOps Capstone: Task Dependency & Execution Roadmap
+# End-to-End DevOps Capstone: Task Dependency & Execution Roadmap
 
 > **Project Title**: Lumora E-Commerce DevOps Platform (Hero Vired Batch 16A)  
 > **Repository**: `Saranyaharish93/hv-ecommerce-devops`  
@@ -9,7 +9,7 @@
 
 ---
 
-## 📌 Executive Summary & Current Project State
+## Executive Summary & Current Project State
 
 The project spans **6 Sprints** and **61 Issues / Tasks**. This document serves as the single source of truth for:
 1. **Current completion status** across all sprints.
@@ -36,7 +36,7 @@ The project spans **6 Sprints** and **61 Issues / Tasks**. This document serves 
 
 ---
 
-## 🔍 Codebase Audit Findings & Actionable Gaps
+## Codebase Audit Findings & Actionable Gaps
 
 A comprehensive review of the active codebase following the merge of PR #70 and PR #71 revealed key findings that must be addressed:
 
@@ -51,7 +51,7 @@ A comprehensive review of the active codebase following the merge of PR #70 and 
 
 ---
 
-## 🌳 Master Dependency Tree & Critical Path
+## Master Dependency Tree & Critical Path
 
 The diagram below outlines the core critical path of the entire project lifecycle. Tasks must flow left-to-right along the arrows.
 
@@ -140,7 +140,7 @@ flowchart TD
 
 ---
 
-## 📋 Comprehensive Sprint-by-Sprint Dependency Matrix
+## Comprehensive Sprint-by-Sprint Dependency Matrix
 
 ### **Sprint 1: Architecture, Docker & VPC Setup**
 
@@ -250,7 +250,7 @@ flowchart TD
 
 ---
 
-## 🎯 Step-by-Step Chronological Execution Order
+## Step-by-Step Chronological Execution Order
 
 To avoid team members being blocked, execute tasks in the following exact sequence:
 

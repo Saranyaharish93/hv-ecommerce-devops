@@ -97,6 +97,9 @@ The complete production cloud architecture, multi-AZ network layout, container w
 #### 3. Live Storefront Loaded via Ingress ALB & Cloudflare
 ![Lumora Storefront Live](../project_artifacts/screenshots/storefront/E-commerce_portal_DNS_mapped-1.png)
 
+#### 4. Live Back-Office Administrative & Financial Control Center
+![Lumora Admin Dashboard](../project_artifacts/screenshots/storefront/E-commerce_admin_homepage.png)
+
 ---
 
 ## 4. CI/CD Workflow and Pipeline Stages with In-Context Proofs

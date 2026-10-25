@@ -151,7 +151,7 @@ ansible-playbook -i inventory/hosts.ini playbooks/setup_jenkins.yml
 ansible-playbook -i inventory/hosts.ini playbooks/setup_jenkins.yml
 ```
 
-![Ansible Jenkins Controller Installation](../project_artifacts/screenshots/ansible/01_jenkins_install_success.png)
+
 
 ### Expected Output on Second Run:
 ```text
