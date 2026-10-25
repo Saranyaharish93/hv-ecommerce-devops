@@ -14,7 +14,6 @@ This project is designed to demonstrate a realistic engineering lifecycle: build
 > **Key Presentation & Navigation Links**:
 > - **Live Storefront Endpoint**: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)
 > - **Master DevOps Suite & Presentation**: [DevOps Platform Master Guide](devops/README.md)
-> - **Viva Technical Defense Guide**: [DevOps Capstone Viva Prep Guide](project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md)
 
 ---
 
