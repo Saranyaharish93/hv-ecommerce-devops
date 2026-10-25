@@ -68,10 +68,17 @@ The production network implements a 3-tier, multi-AZ layout within the `10.0.0.0
 | **Restricted Subnet 1**| `us-east-1a` | `10.0.31.0/24` | 251 | MongoDB StatefulSet database pods |
 | **Restricted Subnet 2**| `us-east-1b` | `10.0.32.0/24` | 251 | MongoDB replication / failover pods |
 
-> **Screenshot Placement: AWS VPC Subnets and Routing Console**  
-> *Insert Here*: Screenshot from the AWS VPC Console showing the 6 subnets, IPv4 CIDR blocks, Availability Zones, and route table associations.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/01_vpc_subnets.png`  
-> *Markdown Embed Syntax*: `![AWS VPC Subnets Console](../project_artifacts/screenshots/terraform/01_vpc_subnets.png)`
+| AWS VPC Network (`10.0.0.0/16`) | Multi-AZ Subnets Configuration |
+| :---: | :---: |
+| ![AWS VPC Console](../project_artifacts/screenshots/aws/vpc.png) | ![AWS VPC Subnets](../project_artifacts/screenshots/aws/subnets.png) |
+
+| Internet Gateway Configuration | NAT Gateway (High Availability) |
+| :---: | :---: |
+| ![Internet Gateway](../project_artifacts/screenshots/aws/internet_gateway.png) | ![NAT Gateway](../project_artifacts/screenshots/aws/nat_gateway.png) |
+
+| VPC Route Tables Routing Topology | Network ACLs (NACL) Boundaries |
+| :---: | :---: |
+| ![Route Tables](../project_artifacts/screenshots/aws/routetables.png) | ![NACLs](../project_artifacts/screenshots/aws/nacls.png) |
 
 ---
 
@@ -98,11 +105,6 @@ terraform {
 2. **Deterministic Race Prevention**: S3 enforces atomic PUT conditions; if Jenkins Build #1 is applying infrastructure, Jenkins Build #2 receives a state lock exception immediately.
 3. **Data Protection**: Encryption at rest is enforced using standard AWS-managed AES-256 keys, and bucket versioning ensures recovery from accidental state corruption.
 
-> **Screenshot Placement: S3 Remote State Bucket and Lockfile**  
-> *Insert Here*: Screenshot from the Amazon S3 Console showing the `lumora-ecommerce-prod-tfstate-us-east-1` bucket with `prod/terraform.tfstate`, encryption enabled, and versioning history.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/02_s3_state_bucket.png`  
-> *Markdown Embed Syntax*: `![S3 State Bucket and Lockfile](../project_artifacts/screenshots/terraform/02_s3_state_bucket.png)`
-
 ---
 
 ## 5. Security Groups and Least-Privilege Boundaries
@@ -116,6 +118,10 @@ Network traffic is strictly controlled through dedicated security groups:
 | `lumora-ecommerce-prod-eks-nodes-sg` | TCP 5000 from ALB SG, intra-cluster | Outbound internet via NAT Gateway | EKS worker nodes hosting Flask pods |
 | `lumora-ecommerce-prod-mongodb-sg` | TCP 27017 from EKS Nodes SG only | Outbound internal to VPC | Completely isolated MongoDB database |
 
+| Security Groups Configuration | AWS Application Load Balancer (ALB) |
+| :---: | :---: |
+| ![Security Groups](../project_artifacts/screenshots/aws/security_groups.png) | ![AWS ALB](../project_artifacts/screenshots/aws/alb.png) |
+
 ---
 
 ## 6. Secrets Management and AWS Budgets with In-Context Proof
@@ -128,10 +134,7 @@ Passwords and signing keys are dynamically generated inside Terraform:
 
 These credentials are encrypted inside AWS Secrets Manager (`lumora-ecommerce-prod-secrets`). Crucially, `recovery_window_in_days = 0` is set to ensure instant resource destruction without retention charges when the capstone is torn down.
 
-> **Screenshot Placement: AWS Secrets Manager Secret Console**  
-> *Insert Here*: Screenshot from AWS Secrets Manager console showing the `lumora-ecommerce-prod-secrets` resource, ARN, tags, and 0-day recovery window setting.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/03_secrets_manager_entry.png`  
-> *Markdown Embed Syntax*: `![AWS Secrets Manager Secret](../project_artifacts/screenshots/terraform/03_secrets_manager_entry.png)`
+![AWS Secrets Manager Secret Console](../project_artifacts/screenshots/aws/secrets.png)
 
 ### 6.2. Shift-Left Cost Governance (`budgets.tf`)
 An AWS Budgets resource actively monitors spending against a $25 USD monthly threshold:
@@ -139,10 +142,7 @@ An AWS Budgets resource actively monitors spending against a $25 USD monthly thr
 - **Forecasted Alarm (100%)**: Fires predictive alerts if spending trends indicate month-end breach.
 - **Critical Alarm (100%)**: Alerts the team immediately when cloud spend reaches $25.
 
-> **Screenshot Placement: AWS Budgets Console Spending Overview**  
-> *Insert Here*: Screenshot of the AWS Budgets console showing the active $25.00 limit, current actual spend, and configured alert notification tiers.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/04_aws_budgets_dashboard.png`  
-> *Markdown Embed Syntax*: `![AWS Budgets Spending Overview](../project_artifacts/screenshots/terraform/04_aws_budgets_dashboard.png)`
+
 
 ---
 
@@ -162,9 +162,6 @@ enable_nat_gateway = false
 
 When `enable_eks = false`, Terraform calculates `count = 0` for both the EKS module and the NAT Gateway, saving ~$175/month while allowing all other VPC, Jenkins, and Ansible tests to run without financial penalties.
 
-> **Screenshot Placement: Clean Terraform Plan Output**  
-> *Insert Here*: Terminal output demonstrating clean `terraform plan` execution showing planned resource changes with remote state resolved and zero errors.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/05_terraform_plan_output.png`  
-> *Markdown Embed Syntax*: `![Clean Terraform Plan Execution](../project_artifacts/screenshots/terraform/05_terraform_plan_output.png)`
+
 
 

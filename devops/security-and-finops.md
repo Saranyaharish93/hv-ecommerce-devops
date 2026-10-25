@@ -7,12 +7,14 @@ This document details the security hardening and cost governance frameworks embe
 ## Table of Contents
 
 1. [DevSecOps Philosophy and Threat Mitigation](#1-devsecops-philosophy-and-threat-mitigation)
-2. [Shift-Left Container Security and Trivy Scanning with In-Context Proof](#2-shift-left-container-security-and-trivy-scanning-with-in-context-proof)
+   - [1.1. Zero-Trust Network Segmentation in Security Groups](#11-zero-trust-network-segmentation-in-security-groups)
+   - [1.2. Least-Privilege IAM Roles & Access Policies](#12-least-privilege-iam-roles--access-policies)
+2. [Shift-Left Container Security and Trivy Scanning](#2-shift-left-container-security-and-trivy-scanning)
 3. [Container Runtime Hardening and Non-Root User Verification](#3-container-runtime-hardening-and-non-root-user-verification)
-4. [Out-of-Band Secrets Governance with Secrets Manager Proof](#4-out-of-band-secrets-governance-with-secrets-manager-proof)
+4. [Out-of-Band Secrets Governance via AWS Secrets Store CSI](#4-out-of-band-secrets-governance-via-aws-secrets-store-csi)
 5. [FinOps Philosophy and Cost Optimization](#5-finops-philosophy-and-cost-optimization)
-6. [Infracost Shift-Left Pipeline Analysis with Report Proof](#6-infracost-shift-left-pipeline-analysis-with-report-proof)
-7. [AWS Budgets and Cost Control Toggles with Budget Proof](#7-aws-budgets-and-cost-control-toggles-with-budget-proof)
+6. [Infracost Shift-Left Pipeline Analysis with Credential Injection](#6-infracost-shift-left-pipeline-analysis-with-credential-injection)
+7. [AWS Budgets and Cost Control Toggles Codified in HCL](#7-aws-budgets-and-cost-control-toggles-codified-in-hcl)
 
 ---
 
@@ -32,7 +34,74 @@ Security is not an afterthought handled post-deployment. We implement **Shift-Le
 
 ---
 
-## 2. Shift-Left Container Security and Trivy Scanning with In-Context Proof
+### 1.1. Zero-Trust Network Segmentation in Security Groups
+
+Our network boundaries strictly enforce isolation between the public perimeter, compute nodes, and stateful databases:
+
+From [`terraform/modules/security_groups/main.tf`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/terraform/modules/security_groups/main.tf):
+```hcl
+# 1. Public ALB Security Group (Only port 80 & 443 exposed externally)
+resource "aws_security_group" "alb" {
+  name        = "${var.project_name}-${var.environment}-alb-sg"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "HTTP / HTTPS Ingress"
+    from_port   = 80
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# 2. Private EKS Compute Nodes (Port 5000 strictly restricted to ALB SG)
+resource "aws_security_group" "eks_nodes" {
+  name        = "${var.project_name}-${var.environment}-eks-nodes-sg"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Allow traffic from ALB to Flask Pods on Port 5000"
+    from_port       = 5000
+    to_port         = 5000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+}
+
+# 3. Database Tier (Port 27017 strictly restricted to EKS Nodes SG only)
+resource "aws_security_group" "mongodb" {
+  name        = "${var.project_name}-${var.environment}-mongodb-sg"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Allow MongoDB port 27017 strictly from EKS Nodes"
+    from_port       = 27017
+    to_port         = 27017
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_nodes.id]
+  }
+}
+```
+
+| Multi-Tier Security Groups | Subnet Network ACLs (NACLs) |
+| :---: | :---: |
+| ![Security Groups](../project_artifacts/screenshots/aws/security_groups.png) | ![NACLs](../project_artifacts/screenshots/aws/nacls.png) |
+
+---
+
+### 1.2. Least-Privilege IAM Roles & Access Policies
+
+All cloud operations operate under explicit least-privilege IAM roles:
+- **Jenkins EC2 Controller Role**: Scoped strictly to ECR push operations, S3 state backend access, and Secrets Manager read permissions.
+- **EKS Node Group Role**: Allows worker nodes to pull images from ECR and bind EBS volumes via the EBS CSI driver, without granting broad EC2 or administrative rights.
+
+| AWS IAM Roles Overview | Scoped IAM Access Policies |
+| :---: | :---: |
+| ![IAM Roles](../project_artifacts/screenshots/aws/iam_roles.png) | ![IAM Policy](../project_artifacts/screenshots/aws/iam_policy.png) |
+
+---
+
+## 2. Shift-Left Container Security and Trivy Scanning
 
 Container images are scanned for vulnerabilities directly inside the Jenkins pipeline (Stage 14) before pushing to Amazon ECR:
 
@@ -48,10 +117,7 @@ trivy image \
 - **Comprehensive CVE Detection**: Analyzes both operating system package manager libraries (Debian/Ubuntu packages) and application language dependencies (`Flask`, `pymongo`, `gunicorn`, `reportlab`).
 - **Audit Logging**: Vulnerability scan output is captured directly in the Jenkins build log, ensuring complete traceability for compliance and security auditing.
 
-> **Screenshot Placement: Trivy Container Vulnerability Scan Output**  
-> *Insert Here*: Console output from the Jenkins pipeline Stage 14 showing the Trivy vulnerability scan table with zero Critical blockers.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/02_trivy_scan_output.png`  
-> *Markdown Embed Syntax*: `![Trivy Security Scan Console](../project_artifacts/screenshots/security_finops/02_trivy_scan_output.png)`
+![Trivy Security Scan Console](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)
 
 ---
 
@@ -94,14 +160,9 @@ Jenkinsfile
 ```
 Excludes infrastructure files, private keys (`*.pem`), Terraform variables, and documentation from the Docker build context, guaranteeing zero intellectual property or credential leakage into container layers.
 
-> **Screenshot Placement: Container Non-Root User Execution Proof**  
-> *Insert Here*: Terminal output of `kubectl exec -it <flask-pod> -n lumora-prod -- whoami && id` confirming execution under unprivileged `appuser` (UID 1000).  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/05_non_root_user_exec.png`  
-> *Markdown Embed Syntax*: `![Non-Root User Execution Proof](../project_artifacts/screenshots/security_finops/05_non_root_user_exec.png)`
-
 ---
 
-## 4. Out-of-Band Secrets Governance with Secrets Manager Proof
+## 4. Out-of-Band Secrets Governance via AWS Secrets Store CSI
 
 The Lumora platform enforces a strict **Zero Plaintext Secrets** standard:
 
@@ -110,6 +171,40 @@ The Lumora platform enforces a strict **Zero Plaintext Secrets** standard:
 | `SECRET_KEY` | Terraform `random_password` (32 chars) | AWS Secrets Manager | Projected via CSI into Flask runtime |
 | `ADMIN_PASSWORD` | Terraform `random_password` (16 chars) | AWS Secrets Manager | Stored in memory; used for store admin login |
 | `MONGO_INITDB_ROOT_PASSWORD`| Terraform `random_password` (16 chars) | AWS Secrets Manager | Synced to `flask-secrets` Opaque Secret |
+
+### Dynamic Injection via Kubernetes `SecretProviderClass`:
+In [`k8s/01-configmap-secrets.yml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/k8s/01-configmap-secrets.yml), the AWS Secrets Store CSI driver synchronizes parameters into the Kubernetes cluster at pod startup:
+
+```yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: aws-secrets-provider
+  namespace: lumora-prod
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "lumora-ecommerce-prod-secrets"
+        objectType: "secretsmanager"
+        jmesPath: 
+          - path: "SECRET_KEY"
+            objectAlias: "SECRET_KEY"
+          - path: "ADMIN_PASSWORD"
+            objectAlias: "ADMIN_PASSWORD"
+          - path: "MONGO_INITDB_ROOT_PASSWORD"
+            objectAlias: "MONGO_INITDB_ROOT_PASSWORD"
+  secretObjects:
+    - secretName: flask-secrets
+      type: Opaque
+      data:
+        - objectName: SECRET_KEY
+          key: SECRET_KEY
+        - objectName: ADMIN_PASSWORD
+          key: ADMIN_PASSWORD
+        - objectName: MONGO_INITDB_ROOT_PASSWORD
+          key: MONGO_INITDB_ROOT_PASSWORD
+```
 
 ### Instant Zero-Cost Cleanup:
 In [terraform/secrets.tf](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/terraform/secrets.tf), we configure:
@@ -121,10 +216,7 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 ```
 Setting `recovery_window_in_days = 0` forces immediate destruction upon `terraform destroy`, bypassing the AWS default 30-day retention holding charges.
 
-> **Screenshot Placement: AWS Secrets Manager Console Overview**  
-> *Insert Here*: Screenshot from AWS Secrets Manager console showing the `lumora-ecommerce-prod-secrets` entry, tags, and 0-day recovery setting.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/03_aws_secrets_manager.png`  
-> *Markdown Embed Syntax*: `![AWS Secrets Manager Console](../project_artifacts/screenshots/security_finops/03_aws_secrets_manager.png)`
+![AWS Secrets Manager Console](../project_artifacts/screenshots/aws/secrets.png)
 
 ---
 
@@ -139,69 +231,96 @@ Cloud financial management (FinOps) is built directly into our engineering lifec
 
 ---
 
-## 6. Infracost Shift-Left Pipeline Analysis with Report Proof
+## 6. Infracost Shift-Left Pipeline Analysis with Credential Injection
 
-Infracost is integrated into Stage 8 of our Jenkins declarative pipeline:
+Infracost is integrated into Stage 8 of our Jenkins declarative pipeline, leveraging Jenkins Credential Binding to inject the API token without exposing it in build console logs:
 
-```bash
-infracost breakdown \
-    --path terraform/ \
-    --format table \
-    --out-file infracost-report.txt
+From [Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile):
+```groovy
+stage('FinOps: Cost Estimation') {
+    steps {
+        echo 'Estimating AWS Infrastructure Cost via Infracost...'
+        script {
+            withCredentials([
+                string(credentialsId: 'infracost-api-key', variable: 'INFRACOST_API_KEY')
+            ]) {
+                sh '''
+                    export INFRACOST_NO_COLOR=true
+                    export INFRACOST_CI=true
+                    
+                    if [ -n "${INFRACOST_API_KEY}" ] && [ "${INFRACOST_API_KEY}" != "dummy" ]; then
+                        infracost scan --org "${INFRACOST_CLI_ORG}" > infracost-report.txt 2>&1
+                        infracost inspect --group-by resource --min-cost 0.5 >> infracost-report.txt 2>&1
+                        cat infracost-report.txt
+                    fi
+                '''
+                archiveArtifacts artifacts: 'infracost-report.txt', allowEmptyArchive: true
+            }
+        }
+    }
+}
 ```
 
-### Sample Output Archived in Jenkins:
-```
-Project: lumora-ecommerce-prod
+| Infracost Credential Binding in Jenkins | Per-Resource Cost Analysis |
+| :---: | :---: |
+| ![Infracost Credentials](../project_artifacts/screenshots/jenkins/08_infracost_credentials.png) | ![Infracost Per-Resource](../project_artifacts/screenshots/security_finops/01b_infracost_details.png) |
 
- Name                                                Monthly Qty  Unit         Monthly Cost
-
- module.vpc.aws_nat_gateway.nat[0]
- ├─ NAT gateway (us-east-1a)                                 730  hours              $32.85
- └─ Data processed                                   Cost depends on usage: $0.045 per GB
-
- module.jenkins.aws_instance.jenkins
- └─ Instance usage (Linux/UNIX, on-demand, t3.small)         730  hours              $15.18
-
- module.eks[0].aws_eks_cluster.main
- └─ EKS cluster                                              730  hours              $73.00
-
- module.eks[0].aws_eks_node_group.main
- └─ Instance usage (2x t3.small)                            1460  hours              $30.37
-
- OVERALL TOTAL                                                                      $151.40
-```
-This report is generated and archived as a pipeline artifact before any infrastructure is applied.
-
-> **Screenshot Placement: Infracost Cost Breakdown Report in Jenkins**  
-> *Insert Here*: Screenshot of the `infracost-report.txt` archived in Jenkins, showing the tabular cost estimate for VPC NAT Gateway, Jenkins, and EKS nodes.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png`  
-> *Markdown Embed Syntax*: `![Infracost Breakdown in Jenkins](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)`
+#### Full Monthly Cloud Cost Projection Breakdown
+![Infracost Breakdown in Jenkins](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)
 
 ---
 
-## 7. AWS Budgets and Cost Control Toggles with Budget Proof
+## 7. AWS Budgets and Cost Control Toggles Codified in HCL
 
 ### 7.1. Cloud Budget Alarms ([terraform/budgets.tf](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/terraform/budgets.tf))
 An AWS Budget enforces a strict $25 limit across 3 automated notification tiers:
-- **Tier 1 (Warning - 80% Actual)**: Alerts subscribers at $20 spend.
-- **Tier 2 (Predictive - 100% Forecasted)**: Dispatches alerts when machine-learning spending projections forecast month-end breach.
-- **Tier 3 (Critical - 100% Actual)**: Alerts the team immediately when cloud spend reaches $25.
+
+```hcl
+resource "aws_budgets_budget" "monthly_capstone_budget" {
+  name              = "${var.project_name}-${var.environment}-monthly-budget"
+  budget_type       = "COST"
+  limit_amount      = var.monthly_budget_limit
+  limit_unit        = "USD"
+  time_unit         = "MONTHLY"
+
+  # Tier 1: Warning Alert - When actual spending crosses 80% ($20)
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = var.budget_notification_emails
+  }
+
+  # Tier 2: Predictive Alert - When FORECASTED spending will breach 100% ($25)
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = var.budget_notification_emails
+  }
+
+  # Tier 3: Critical Alert - When actual spending hits or breaches 100% ($25)
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = var.budget_notification_emails
+  }
+}
+```
 
 ### 7.2. Modular Cost Toggles ([terraform/terraform.tfvars](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/terraform/terraform.tfvars))
 ```hcl
 enable_eks = false
 enable_nat_gateway = false
 ```
+
 Keeping EKS and NAT Gateways paused saves ~$175 per month:
 - **EKS Control Plane**: Saves $73.00/month.
 - **EKS Worker Nodes (2x t3.small)**: Saves $30.37/month.
 - **NAT Gateways (Dual-AZ)**: Saves $65.70/month.
 
 When the team is ready for the live demonstration, setting these variables to `true` launches the full Kubernetes tier in approximately 12 minutes.
-
-> **Screenshot Placement: AWS Budgets Console Alarms and Spend Bar**  
-> *Insert Here*: Screenshot from AWS Budgets console showing the active $25 limit, spending progress bar, and configured alert notification tiers.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/04_aws_budgets_alerts.png`  
-> *Markdown Embed Syntax*: `![AWS Budgets Spending Alarms](../project_artifacts/screenshots/security_finops/04_aws_budgets_alerts.png)`
-

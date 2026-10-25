@@ -1,10 +1,20 @@
 # Lumora E-Commerce DevOps Capstone
 
+[![Production Storefront](https://img.shields.io/badge/Live%20Storefront-lumora.thiagarajanb.dpdns.org-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://lumora.thiagarajanb.dpdns.org/)
+[![AWS EKS](https://img.shields.io/badge/Kubernetes-AWS%20EKS%20v1.30-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](devops/kubernetes.md)
+[![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%2016--Stage-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
+[![Terraform](https://img.shields.io/badge/IaC-Terraform%20v1.5+-7B42BC?style=flat-square&logo=terraform&logoColor=white)](devops/terraform.md)
+[![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)](devops/ansible.md)
+[![Status](https://img.shields.io/badge/Capstone%20Status-100%25%20Completed-brightgreen?style=flat-square)](devops/README.md)
+
 Lumora is a full-stack e-commerce web application built with Python, Flask, and MongoDB. The repository combines a working storefront with the DevOps assets required for an end-to-end capstone project covering CI/CD, cloud infrastructure automation, Docker, Jenkins, Terraform, Ansible, Kubernetes, and observability.
 
 This project is designed to demonstrate a realistic engineering lifecycle: build a functional online store, containerize the application, automate validation and security checks, provision cloud infrastructure, and deploy to a Kubernetes-based environment.
 
-> **Master DevOps Documentation**: For deep-dive architectural breakdowns, pipeline stages, Kubernetes manifests, Ansible roles, Prometheus alerts, and FinOps governance, see the comprehensive [DevOps Platform Documentation Suite](devops/README.md).
+> **Key Presentation & Navigation Links**:
+> - 🌐 **Live Storefront Endpoint**: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)
+> - 📑 **Master DevOps Suite & Presentation**: [DevOps Platform Master Guide](devops/README.md)
+> - 🎓 **Viva Technical Defense Guide**: [DevOps Capstone Viva Prep Guide](project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md)
 
 ---
 
@@ -98,24 +108,80 @@ It demonstrates how the following work together in practice:
 
 ---
 
+## 📸 Live Storefront & DevOps Implementation Proofs
+
+### 1. Live E-Commerce Storefront on AWS EKS & Cloudflare
+*Live Public Endpoint: [https://lumora.thiagarajanb.dpdns.org/](https://lumora.thiagarajanb.dpdns.org/)*
+
+| Storefront Homepage | Product Catalog & Inventory |
+| :---: | :---: |
+| ![Homepage](project_artifacts/screenshots/storefront/01_homepage.png) | ![Product Catalog](project_artifacts/screenshots/storefront/02_shop_catalog.png) |
+
+| Shopping Cart & Checkout | User Authentication Portal |
+| :---: | :---: |
+| ![Shopping Cart](project_artifacts/screenshots/storefront/03_shopping_cart.png) | ![User Login](project_artifacts/screenshots/storefront/04_login_page.png) |
+
+---
+
+### 2. CI/CD Orchestration & Shift-Left DevSecOps (Jenkins & Ansible)
+
+| Jenkins Web Controller Dashboard | 16-Stage Declarative Pipeline Execution |
+| :---: | :---: |
+| ![Jenkins Web Dashboard](project_artifacts/screenshots/jenkins/Jenkins_Homepage.png) | ![Pipeline Stage View](project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png) |
+
+| Shift-Left FinOps Cost Estimation (Infracost) | Idempotent Host Configuration (Ansible) |
+| :---: | :---: |
+| ![Infracost Cost Analysis](project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png) | ![Ansible Execution](project_artifacts/screenshots/ansible/01_jenkins_install_success.png) |
+
+---
+
+### 3. AWS Cloud Infrastructure & Kubernetes Workloads
+
+| AWS Multi-AZ VPC Architecture | Amazon EKS Workload Console |
+| :---: | :---: |
+| ![AWS VPC](project_artifacts/screenshots/aws/vpc.png) | ![EKS Workload Status](project_artifacts/screenshots/aws/eks_workload_status.png) |
+
+| AWS Application Load Balancer (ALB) | Kubernetes Pods & StatefulSets (`lumora-prod`) |
+| :---: | :---: |
+| ![AWS ALB](project_artifacts/screenshots/aws/alb.png) | ![Kubernetes Workloads](project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png) |
+
+#### Horizontal Pod Autoscaler (HPA v2) Metric Reporting
+![Horizontal Pod Autoscaler](project_artifacts/screenshots/kubernetes/04_hpa_active_metrics.png)
+
+---
+
 ## Application Features
 
-### Customer-facing features
-- User registration and login
-- Session-based authentication and role-aware access
+### Customer-facing features & Visual Storefront Walkthrough
+
+| Storefront Landing & Hero Banner (`/`) | Product Catalog & Inventory Filtering (`/shop`) |
+| :---: | :---: |
+| ![Homepage](project_artifacts/screenshots/storefront/01_homepage.png) | ![Shop Catalog](project_artifacts/screenshots/storefront/02_shop_catalog.png) |
+
+| Curated Product Collections (`/collections`) | Brand Story & About (`/story`) |
+| :---: | :---: |
+| ![Collections](project_artifacts/screenshots/storefront/05_collections.png) | ![Brand Story](project_artifacts/screenshots/storefront/07_brand_story.png) |
+
+| Interactive Cart & Order Calculation (`/cart`) | Customer Saved Wishlist |
+| :---: | :---: |
+| ![Shopping Cart](project_artifacts/screenshots/storefront/03_shopping_cart.png) | ![Wishlist](project_artifacts/screenshots/storefront/E-commerce_portal_login_wishlist.png) |
+
+| Customer Profile & Account Management | Order Tracking & Status Journey |
+| :---: | :---: |
+| ![Profile](project_artifacts/screenshots/storefront/E-commerce_portal_profilepage.png) | ![Order Journey](project_artifacts/screenshots/storefront/E-commerce_portal_orderjourney-1.png) |
+
+| Customer Support & Inquiries (`/contact`) | Authentication Portal (`/login`) |
+| :---: | :---: |
+| ![Contact](project_artifacts/screenshots/storefront/06_contact_page.png) | ![Login](project_artifacts/screenshots/storefront/04_login_page.png) |
+
+- User registration, session-based authentication, and role-aware access
 - Password reset flow with simulated email tracking
-- Product catalog and browsing
-- Product detail pages with ratings and review capability
-- Wishlist support
-- Shopping cart management
-- Checkout flow with demo payment methods
-- Order history and recent order browsing
-- Individual order detail view
-- Order tracking and status lifecycle
-- Invoice download
-- Contact form
-- About page and brand experience
-- Responsive storefront UI
+- Product catalog, search, and category browsing
+- Product detail pages with ratings and customer review capability
+- Wishlist support and shopping cart management
+- Checkout flow with demo payment methods and invoice generation
+- Order history, detailed order lifecycle tracking, and status updates
+- Responsive UI optimized for desktop, tablet, and mobile displays
 
 ### Admin features
 - Admin dashboard with key metrics
@@ -180,14 +246,14 @@ Key infrastructure and delivery assets include:
 - `Dockerfile`
 - `docker-compose.yml`
 - `Jenkinsfile`
-- `azure-pipelines.yml`
 - `terraform/`
 - `ansible/`
 - `k8s/`
+- `monitoring/`
 - `project_artifacts/`
 
 Architecture references and sprint documentation are included in:
-- `project_artifacts/architecture_diagram_v2.png`
+- `project_artifacts/Lumora_E-Commerce_Architecture_v3.png`
 - `project_artifacts/Capstone_Task_Execution_Roadmap.md`
 - `project_artifacts/Project_Sprints.txt`
 
@@ -216,14 +282,18 @@ hv-ecommerce-devops/
 │   ├── 04-hpa.yml
 │   ├── 05-service-ingress.yml
 │   └── kustomization.yml
+├── monitoring/
+│   ├── alertmanager/
+│   └── prometheus/
 ├── project_artifacts/
-│   ├── architecture_diagram_v2.png
+│   ├── Lumora_E-Commerce_Architecture_v3.png
 │   ├── Capstone_Task_Execution_Roadmap.md
+│   ├── DevOps_Capstone_Viva_Preparation_Guide.md
 │   ├── Implementation_Plan_Sprint2_Jenkins_Automation.md
 │   ├── Jenkinsfile
 │   ├── Project_Sprints.txt
 │   ├── Project4_ProblemStatement.txt
-│   └── ...
+│   └── screenshots/
 ├── scripts/
 │   └── setup_metrics_server.sh
 ├── terraform/
@@ -246,8 +316,6 @@ hv-ecommerce-devops/
 ├── Dockerfile
 ├── Jenkinsfile
 ├── README.md
-├── README-new.md
-├── azure-pipelines.yml
 ├── docker-compose.yml
 ├── requirements.txt
 ├── requirements-dev.txt
@@ -424,7 +492,7 @@ The Compose setup runs both the Flask application and MongoDB together and keeps
 ## DevOps Assets
 
 ### Jenkins
-The repository contains a Jenkins declarative pipeline in `Jenkinsfile`, along with a sample Azure Pipelines configuration in `azure-pipelines.yml`.
+The repository contains a battle-tested Jenkins declarative pipeline in `Jenkinsfile`.
 
 Typical pipeline goals include:
 - Terraform validation and planning
@@ -458,26 +526,15 @@ The `project_artifacts/` directory stores architecture diagrams, sprint planning
 
 ## Capstone Roadmap Status
 
-This repository follows a staged DevOps capstone roadmap covering the key phases of the project lifecycle.
+This repository follows a staged DevOps capstone roadmap covering the key phases of the project lifecycle. All 6 planned sprints and production deployment milestones are **100% implemented and verified**.
 
-### Implemented / complete
-- Flask storefront application
-- MongoDB integration
-- Dockerization
-- Docker Compose orchestration
-- Automated tests
-- Terraform scaffolding and infrastructure modules
-- Kubernetes manifests
-- Jenkins pipeline templates
-- Architecture and sprint documentation
-
-### In progress / planned
-- Full AWS deployment execution
-- End-to-end Jenkins validation
-- Production-level EKS checks
-- Prometheus and Grafana setup
-- Alerting and incident notification flow
-- Final presentation and documentation delivery
+### Implemented & Verified Milestones
+- **Sprint 1 — Core App & Dockerization**: Flask storefront, MongoDB integration, containerization, multi-stage Docker build, and Docker Compose orchestration.
+- **Sprint 2 — CI/CD Automation**: 16-stage Jenkins Declarative Pipeline with SonarQube quality gates, Trivy CVE vulnerability scanning, and Docker BuildKit push to Amazon ECR.
+- **Sprint 3 — Infrastructure as Code (IaC)**: Modular Terraform provisioning for Multi-AZ VPC (`10.0.0.0/16`), public/private subnets, NAT Gateways, ECR, and Amazon EKS cluster with S3 & DynamoDB remote state locking.
+- **Sprint 4 — Configuration Management**: Ansible roles and playbooks for automated, idempotent Jenkins controller and worker node configuration.
+- **Sprint 5 — Kubernetes Orchestration & Scaling**: Production manifests for `lumora-prod`, MongoDB StatefulSet with AWS EBS `gp3` CSI storage, Flask Deployment with liveness/readiness probes, HPA autoscaling (2 to 10 replicas), and AWS Application Load Balancer Ingress with Cloudflare Flexible SSL.
+- **Sprint 6 — Observability & FinOps**: Prometheus time-series metrics, Alertmanager incident notification rules, Infracost automated pull request cost estimation, and comprehensive platform documentation.
 
 See the planning documents here:
 - `project_artifacts/Capstone_Task_Execution_Roadmap.md`
@@ -490,21 +547,23 @@ See the planning documents here:
 For local demonstration, the application creates an admin user automatically if it does not already exist.
 
 Default values:
-
-- [x] Architecture diagram
-- [ ] CI/CD architecture
-- [ ] Deployment screenshots
-- [ ] Monitoring screenshots
-- [ ] Security scan evidence
-- [ ] Project documentation
-- [ ] Final presentation
-- [ ] Project evaluation & demonstration
 ```text
 ADMIN_EMAIL=admin@lumora.local
 ADMIN_PASSWORD=Admin@123
 ```
 
-These credentials are intended for local testing only and should not be used in production environments.
+---
+
+## Deliverables & Capstone Completion Status
+
+- [x] Architecture diagram (`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`)
+- [x] CI/CD architecture & 16-stage pipeline (`devops/jenkins.md`, `Jenkinsfile`)
+- [x] Deployment screenshots & visual proofs (`project_artifacts/screenshots/`)
+- [x] Monitoring dashboards & Prometheus alerting rules (`monitoring/`)
+- [x] Security scan evidence (Trivy CVE scans, Infracost FinOps)
+- [x] Comprehensive platform documentation (`devops/README.md`)
+- [x] Final presentation & live storefront endpoint (`https://lumora.thiagarajanb.dpdns.org/`)
+- [x] Project evaluation & viva technical defense guide (`project_artifacts/DevOps_Capstone_Viva_Preparation_Guide.md`)
 
 ---
 

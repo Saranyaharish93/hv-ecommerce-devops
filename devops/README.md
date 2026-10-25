@@ -86,21 +86,16 @@ The complete production cloud architecture, multi-AZ network layout, container w
 
 ![Lumora E-Commerce DevOps Platform Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
 
+### Visual Implementation Evidence
 
-> **Screenshot Placement: AWS VPC Subnets and Route Tables Console**  
-> *Insert Here*: Screenshot from AWS VPC Console showing the 6 subnets across Availability Zones A and B with route table associations.  
-> *Target Image File*: `project_artifacts/screenshots/terraform/01_vpc_subnets.png`  
-> *Markdown Embed Syntax*: `![AWS VPC Subnets Console](../project_artifacts/screenshots/terraform/01_vpc_subnets.png)`
+#### 1. AWS VPC Multi-AZ Subnets & Route Tables
+![AWS VPC Subnets Console](../project_artifacts/screenshots/terraform/01_vpc_subnets.png)
 
-> **Screenshot Placement: EKS Workloads Running in `lumora-prod` Namespace**  
-> *Insert Here*: Terminal output of `kubectl get all -n lumora-prod` showing active Flask pods, MongoDB StatefulSet, services, and HPA.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png`  
-> *Markdown Embed Syntax*: `![Kubernetes Workloads Running](../project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png)`
+#### 2. Kubernetes Workloads Running in `lumora-prod` Namespace
+![Kubernetes Workloads Running](../project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png)
 
-> **Screenshot Placement: Live E-Commerce Storefront Loaded via Ingress ALB**  
-> *Insert Here*: Browser window displaying the live Lumora catalog loaded via the AWS Application Load Balancer DNS endpoint.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png`  
-> *Markdown Embed Syntax*: `![Lumora Storefront Live](../project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png)`
+#### 3. Live Storefront Loaded via Ingress ALB & Cloudflare
+![Lumora Storefront Live](../project_artifacts/screenshots/storefront/E-commerce_portal_DNS_mapped-1.png)
 
 ---
 
@@ -158,20 +153,16 @@ Stage 16: Deploy to EKS & Setup Metrics Server (Conditional Guard)
   └── If EKS is ACTIVE: boots Metrics Server, Secrets CSI, and applies manifests via Kustomize.
 ```
 
-> **Screenshot Placement: Jenkins 16-Stage Pipeline Complete Run**  
-> *Insert Here*: Jenkins Stage View UI showing all 16 pipeline stages with green success indicators from Checkout through EKS Deploy.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png`  
-> *Markdown Embed Syntax*: `![Jenkins 16-Stage Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)`
+### Visual CI/CD & Security Evidence
 
-> **Screenshot Placement: Infracost Cost Breakdown Report in Jenkins**  
-> *Insert Here*: Tabular Infracost cost report archived as a Jenkins artifact showing monthly costs for VPC NAT, Jenkins, and EKS nodes.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png`  
-> *Markdown Embed Syntax*: `![Infracost Cost Breakdown Report](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)`
+#### 4. Jenkins 16-Stage Declarative Pipeline Run
+![Jenkins 16-Stage Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)
 
-> **Screenshot Placement: Trivy Container Vulnerability Scan in Build Log**  
-> *Insert Here*: Console output from Jenkins build showing Trivy vulnerability scanning with 0 critical blockers.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/04_trivy_scan_console.png`  
-> *Markdown Embed Syntax*: `![Trivy Scan Console Output](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)`
+#### 5. Infracost Shift-Left Financial Breakdown Report
+![Infracost Cost Breakdown Report](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)
+
+#### 6. Trivy Container Vulnerability Scan Console Output
+![Trivy Scan Console Output](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)
 
 ---
 

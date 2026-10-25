@@ -28,10 +28,11 @@ The Jenkins CI/CD controller is deployed on an Amazon EC2 instance within the Lu
 | **IAM Instance Profile** | `lumora-ecommerce-prod-jenkins-role` | Grants controller least-privilege access to ECR, EKS, and S3 |
 | **State Protection** | `lifecycle { ignore_changes = [ami] }`| Prevents unintentional EC2 destruction during Terraform applies |
 
-> **Screenshot Placement: Jenkins Controller Dashboard**  
-> *Insert Here*: Screenshot showing the active Jenkins Web UI running on `http://32.195.28.191:8080` with the project pipeline `hv-ecommerce-devops-pipeline` registered and ready.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/01_jenkins_dashboard.png`  
-> *Markdown Embed Syntax*: `![Jenkins Controller Dashboard](../project_artifacts/screenshots/jenkins/01_jenkins_dashboard.png)`
+#### Jenkins Web Controller Dashboard
+![Jenkins Web UI Dashboard](../project_artifacts/screenshots/jenkins/Jenkins_Homepage.png)
+
+#### AWS EC2 Host Instance & Networking Configuration
+![Jenkins EC2 Controller Host](../project_artifacts/screenshots/jenkins/01_jenkins_dashboard.png)
 
 ---
 
@@ -39,11 +40,9 @@ The Jenkins CI/CD controller is deployed on an Amazon EC2 instance within the Lu
 
 The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile). It executes 16 sequential stages spanning code validation, infrastructure management, containerization, security scanning, artifact promotion, and Kubernetes deployment.
 
-
-> **Screenshot Placement: 16-Stage Pipeline Complete Run**  
-> *Insert Here*: Screenshot of the Jenkins Blue Ocean / Stage View UI displaying all 16 pipeline stages with green success indicators from Checkout through Deploy to EKS.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png`  
-> *Markdown Embed Syntax*: `![Pipeline Stage View Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)`
+| 16-Stage Pipeline Stage View | Multi-Branch Pipeline Job Overview |
+| :---: | :---: |
+| ![Pipeline Stage View](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png) | ![Jenkins Pipeline Job](../project_artifacts/screenshots/jenkins/Jenkins_hv-ecommerce-pipeline_page.png) |
 
 ---
 
@@ -79,19 +78,13 @@ The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired
 - Emits a tabular financial report (`infracost-report.txt`) showing baseline costs, usage variations, and total monthly cloud projection.
 - Configured with a 20-second timeout and exception guard so pipeline execution is never blocked if API keys are rotating.
 
-> **Screenshot Placement: Infracost Breakdown Report**  
-> *Insert Here*: Screenshot of the `infracost-report.txt` archived in Jenkins, showing the monthly breakdown for VPC NAT Gateway, Jenkins EC2, EKS control plane, and worker nodes.  
-> *Target Image File*: `project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png`  
-> *Markdown Embed Syntax*: `![Infracost Cost Breakdown](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)`
+![Infracost Cost Breakdown](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)
 
 ### Stage 9 & 10: Terraform Apply Approval & Apply
 - On the `main` branch, a manual interactive approval gate (`input message: 'Review the archived Terraform plan. Apply infrastructure changes?'`) pauses execution.
 - Once approved, `terraform apply -input=false -auto-approve tfplan` executes the planned infrastructure updates without recalculating the graph.
 
-> **Screenshot Placement: Manual Approval Gate Modal**  
-> *Insert Here*: Screenshot of the interactive Jenkins input modal: "Review the archived Terraform plan. Apply infrastructure changes?" displaying Proceed / Abort buttons.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/03_terraform_apply_approval_gate.png`  
-> *Markdown Embed Syntax*: `![Terraform Apply Approval Gate](../project_artifacts/screenshots/jenkins/03_terraform_apply_approval_gate.png)`
+
 
 ### Stage 11: Ansible Configuration Check
 - Changes directory to `ansible/` and validates syntax:
@@ -122,10 +115,7 @@ The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired
   ```
 - Generates a security vulnerability table directly within the Jenkins build console.
 
-> **Screenshot Placement: Trivy Vulnerability Scan Output**  
-> *Insert Here*: Screenshot of the Jenkins console log showing Trivy scanning the `lumora-ecommerce-flask` image and reporting 0 Critical vulnerabilities.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/04_trivy_scan_console.png`  
-> *Markdown Embed Syntax*: `![Trivy Scan Console Output](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)`
+![Trivy Scan Console Output](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)
 
 ### Stage 15: Push Docker Image to AWS ECR
 - Authenticates Docker securely via AWS IAM authorization token:
@@ -134,6 +124,8 @@ The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired
   ```
 - Tags the image with both the unique build number `${BUILD_NUMBER}` and `latest`.
 - Pushes both tags to the private Amazon ECR repository.
+
+![Amazon ECR Flask Repository](../project_artifacts/screenshots/jenkins/06_ecr_images.png)
 
 ### Stage 16: Deploy to EKS & Setup Metrics Server (Conditional Guard)
 - The pipeline checks if the EKS cluster is active before attempting deployment:
@@ -175,10 +167,7 @@ The trigger is codified in the Ansible job template ([job.xml.j2](file:///d:/Her
 </triggers>
 ```
 
-> **Screenshot Placement: GitHub Webhook Delivery Log**  
-> *Insert Here*: Screenshot of GitHub repository Settings -> Webhooks page showing the delivery payload to `http://32.195.28.191:8080/github-webhook/` with an HTTP 200 OK status badge.  
-> *Target Image File*: `project_artifacts/screenshots/jenkins/05_github_webhook_delivery.png`  
-> *Markdown Embed Syntax*: `![GitHub Webhook Delivery Log](../project_artifacts/screenshots/jenkins/05_github_webhook_delivery.png)`
+
 
 ---
 

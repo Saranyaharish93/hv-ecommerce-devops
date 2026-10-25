@@ -1,0 +1,964 @@
+Started by user admin
+Lightweight checkout support not available, falling back to full checkout.
+Checking out git https://github.com/Saranyaharish93/hv-ecommerce-devops.git into /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline@script/54b3a74707fb9b142fee7b6da5fc3daf7bd5ad761045ab491b16581b23eccff5 to read Jenkinsfile
+The recommended git tool is: NONE
+using credential c918cbb7-6207-4b36-941d-c618b646463f
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline@script/54b3a74707fb9b142fee7b6da5fc3daf7bd5ad761045ab491b16581b23eccff5/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/Saranyaharish93/hv-ecommerce-devops.git # timeout=10
+Fetching upstream changes from https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.43.0'
+using GIT_ASKPASS to set credentials GitHub PAT for hv-ecommerce-devops
+ > git fetch --tags --force --progress -- https://github.com/Saranyaharish93/hv-ecommerce-devops.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/docs/update-project-screenshots-docx
+Seen branch in repository origin/feat/provision-eks-cluster
+Seen branch in repository origin/feature/capstone-task-execution-roadmap
+Seen branch in repository origin/feature/devops-documentation-suite
+Seen branch in repository origin/feature/finalize_readme
+Seen branch in repository origin/feature/issue-15-terraform-jenkins
+Seen branch in repository origin/feature/issue-22-25-ansible-pytest-pipeline
+Seen branch in repository origin/feature/issue-5-jenkins-aws-config
+Seen branch in repository origin/feature/shift-left-finops
+Seen branch in repository origin/feature/sprint2-jenkins-automation
+Seen branch in repository origin/feature/sprint3-issue18-docker-ansible
+Seen branch in repository origin/feature/sprint3-issue19-kubectl-ansible
+Seen branch in repository origin/feature/sprint4-ci-build-scan-ecr
+Seen branch in repository origin/feature/sprint4-k8s-manifests-secrets
+Seen branch in repository origin/feature/sprint4-reliability-and-secrets-csi
+Seen branch in repository origin/feature/sprint5-application-metrics
+Seen branch in repository origin/feature/sprint5-install-prometheus
+Seen branch in repository origin/fix/issue-15-jenkins-timestamps
+Seen branch in repository origin/fix/k8s-csi-driver-name
+Seen branch in repository origin/fix/k8s-ecr-image-repository-name
+Seen branch in repository origin/main
+Seen 21 remote branches
+ > git show-ref --tags -d # timeout=10
+Checking out Revision b05ae0593a41d83efd32c1c514bc9cbbac638e5c (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f b05ae0593a41d83efd32c1c514bc9cbbac638e5c # timeout=10
+Commit message: "feat(k8s): expose flask-service as LoadBalancer for public access"
+ > git rev-list --no-walk b58c0bb16eda83a2063dd243fad167bafc62dd81 # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential c918cbb7-6207-4b36-941d-c618b646463f
+Cloning the remote Git repository
+Cloning repository https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+ > git init /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline # timeout=10
+Fetching upstream changes from https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.43.0'
+using GIT_ASKPASS to set credentials GitHub PAT for hv-ecommerce-devops
+ > git fetch --tags --force --progress -- https://github.com/Saranyaharish93/hv-ecommerce-devops.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/Saranyaharish93/hv-ecommerce-devops.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+Seen branch in repository origin/docs/update-project-screenshots-docx
+Seen branch in repository origin/feat/provision-eks-cluster
+Seen branch in repository origin/feature/capstone-task-execution-roadmap
+Seen branch in repository origin/feature/devops-documentation-suite
+Seen branch in repository origin/feature/finalize_readme
+Seen branch in repository origin/feature/issue-15-terraform-jenkins
+Seen branch in repository origin/feature/issue-22-25-ansible-pytest-pipeline
+Seen branch in repository origin/feature/issue-5-jenkins-aws-config
+Seen branch in repository origin/feature/shift-left-finops
+Seen branch in repository origin/feature/sprint2-jenkins-automation
+Seen branch in repository origin/feature/sprint3-issue18-docker-ansible
+Seen branch in repository origin/feature/sprint3-issue19-kubectl-ansible
+Seen branch in repository origin/feature/sprint4-ci-build-scan-ecr
+Seen branch in repository origin/feature/sprint4-k8s-manifests-secrets
+Seen branch in repository origin/feature/sprint4-reliability-and-secrets-csi
+Seen branch in repository origin/feature/sprint5-application-metrics
+Seen branch in repository origin/feature/sprint5-install-prometheus
+Seen branch in repository origin/fix/issue-15-jenkins-timestamps
+Seen branch in repository origin/fix/k8s-csi-driver-name
+Seen branch in repository origin/fix/k8s-ecr-image-repository-name
+Seen branch in repository origin/main
+Seen 21 remote branches
+ > git show-ref --tags -d # timeout=10
+Checking out Revision b05ae0593a41d83efd32c1c514bc9cbbac638e5c (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f b05ae0593a41d83efd32c1c514bc9cbbac638e5c # timeout=10
+Commit message: "feat(k8s): expose flask-service as LoadBalancer for public access"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout SCM)
+[Pipeline] echo
+Checking out source code from GitHub...
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential c918cbb7-6207-4b36-941d-c618b646463f
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/Saranyaharish93/hv-ecommerce-devops.git # timeout=10
+Fetching upstream changes from https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.43.0'
+using GIT_ASKPASS to set credentials GitHub PAT for hv-ecommerce-devops
+ > git fetch --tags --force --progress -- https://github.com/Saranyaharish93/hv-ecommerce-devops.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/docs/update-project-screenshots-docx
+Seen branch in repository origin/feat/provision-eks-cluster
+Seen branch in repository origin/feature/capstone-task-execution-roadmap
+Seen branch in repository origin/feature/devops-documentation-suite
+Seen branch in repository origin/feature/finalize_readme
+Seen branch in repository origin/feature/issue-15-terraform-jenkins
+Seen branch in repository origin/feature/issue-22-25-ansible-pytest-pipeline
+Seen branch in repository origin/feature/issue-5-jenkins-aws-config
+Seen branch in repository origin/feature/shift-left-finops
+Seen branch in repository origin/feature/sprint2-jenkins-automation
+Seen branch in repository origin/feature/sprint3-issue18-docker-ansible
+Seen branch in repository origin/feature/sprint3-issue19-kubectl-ansible
+Seen branch in repository origin/feature/sprint4-ci-build-scan-ecr
+Seen branch in repository origin/feature/sprint4-k8s-manifests-secrets
+Seen branch in repository origin/feature/sprint4-reliability-and-secrets-csi
+Seen branch in repository origin/feature/sprint5-application-metrics
+Seen branch in repository origin/feature/sprint5-install-prometheus
+Seen branch in repository origin/fix/issue-15-jenkins-timestamps
+Seen branch in repository origin/fix/k8s-csi-driver-name
+Seen branch in repository origin/fix/k8s-ecr-image-repository-name
+Seen branch in repository origin/main
+Seen 21 remote branches
+ > git show-ref --tags -d # timeout=10
+Checking out Revision b05ae0593a41d83efd32c1c514bc9cbbac638e5c (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f b05ae0593a41d83efd32c1c514bc9cbbac638e5c # timeout=10
+Commit message: "feat(k8s): expose flask-service as LoadBalancer for public access"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Validate Prerequisites)
+[Pipeline] echo
+Validating Terraform, AWS CLI and AWS authentication...
+[Pipeline] sh
++ terraform version
+Terraform v1.16.1
+on linux_amd64
+
+Your version of Terraform is out of date! The latest version
+is 1.17.0. You can update by downloading from https://developer.hashicorp.com/terraform/install
+[Pipeline] sh
++ aws --version
+aws-cli/2.36.40 Python/3.14.6 Linux/7.0.0-1014-aws exe/x86_64.ubuntu.24
+[Pipeline] sh
++ infracost --version
+infracost version 2.18.2
+[Pipeline] sh
++ aws sts get-caller-identity
+{
+    "UserId": "AROA3BV4IBLOIPIWDIRO7:i-03e7a9837cadbced6",
+    "Account": "759530261212",
+    "Arn": "arn:aws:sts::759530261212:assumed-role/lumora-ecommerce-prod-jenkins-role/i-03e7a9837cadbced6"
+}
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Init)
+[Pipeline] echo
+Initializing Terraform S3 Remote State Backend...
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/terraform
+[Pipeline] {
+[Pipeline] sh
++ terraform init -input=false -no-color
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Initializing modules...
+- security_groups in modules/security_groups
+- vpc in modules/vpc
+- eks in modules/eks
+- ecr in modules/ecr
+- jenkins in modules/jenkins
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Reusing previous version of hashicorp/kubernetes from the dependency lock file
+- Reusing previous version of hashicorp/helm from the dependency lock file
+- Reusing previous version of hashicorp/local from the dependency lock file
+- Reusing previous version of hashicorp/tls from the dependency lock file
+- Reusing previous version of hashicorp/random from the dependency lock file
+- Installing hashicorp/tls v4.3.0...
+- Installed hashicorp/tls v4.3.0 (signed by HashiCorp)
+- Installing hashicorp/random v3.9.0...
+- Installed hashicorp/random v3.9.0 (signed by HashiCorp)
+- Installing hashicorp/aws v5.100.0...
+- Installed hashicorp/aws v5.100.0 (signed by HashiCorp)
+- Installing hashicorp/kubernetes v2.38.0...
+- Installed hashicorp/kubernetes v2.38.0 (signed by HashiCorp)
+- Installing hashicorp/helm v2.17.0...
+- Installed hashicorp/helm v2.17.0 (signed by HashiCorp)
+- Installing hashicorp/local v2.9.0...
+- Installed hashicorp/local v2.9.0 (signed by HashiCorp)
+
+Terraform has made some changes to the provider dependency selections recorded
+in the .terraform.lock.hcl file. Review those changes and commit them to your
+version control system if they represent changes you intended to make.
+
+Terraform has been successfully initialized!
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Format Check)
+[Pipeline] echo
+Checking Terraform formatting...
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/terraform
+[Pipeline] {
+[Pipeline] sh
++ terraform fmt -check -recursive -no-color
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Validate)
+[Pipeline] echo
+Validating Terraform configuration...
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/terraform
+[Pipeline] {
+[Pipeline] sh
++ terraform validate -no-color
+Success! The configuration is valid.
+
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Plan)
+[Pipeline] echo
+Generating Terraform execution plan...
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/terraform
+[Pipeline] {
+[Pipeline] sh
++ terraform plan -input=false -no-color -out=tfplan
+random_password.admin_password: Refreshing state... [id=none]
+module.jenkins.tls_private_key.jenkins_ssh_key: Refreshing state... [id=cc8511bd26c099c8b6dd6bc2abfc0b0567749db7]
+random_password.mongo_root_password: Refreshing state... [id=none]
+random_password.flask_secret_key: Refreshing state... [id=none]
+module.jenkins.local_file.jenkins_private_key: Refreshing state... [id=57ca84c7cc982c8e4025dc7d27a472eba5cfcd0b]
+aws_secretsmanager_secret.app_secrets: Refreshing state... [id=arn:aws:secretsmanager:us-east-1:759530261212:secret:lumora-ecommerce-prod-secrets-vhbLwJ]
+module.ecr.aws_ecr_repository.lumora_flask: Refreshing state... [id=lumora-ecommerce-flask]
+module.jenkins.aws_iam_role.jenkins: Refreshing state... [id=lumora-ecommerce-prod-jenkins-role]
+module.eks[0].aws_iam_role.eks_node_group: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role]
+module.jenkins.data.aws_ami.ubuntu: Reading...
+module.jenkins.aws_key_pair.jenkins: Refreshing state... [id=lumora-ecommerce-prod-jenkins-key]
+module.vpc.aws_vpc.main: Refreshing state... [id=vpc-0b586d81bcf9b743c]
+module.eks[0].aws_iam_role.eks_cluster: Refreshing state... [id=lumora-ecommerce-prod-eks-cluster-role]
+module.eks[0].aws_cloudwatch_log_group.eks_cluster: Refreshing state... [id=/aws/eks/lumora-ecommerce-prod/cluster]
+aws_budgets_budget.monthly_capstone_budget: Refreshing state... [id=759530261212:lumora-ecommerce-prod-monthly-budget]
+aws_secretsmanager_secret_version.app_secrets_val: Refreshing state... [id=arn:aws:secretsmanager:us-east-1:759530261212:secret:lumora-ecommerce-prod-secrets-vhbLwJ|terraform-20261020104422798300000002]
+aws_iam_policy.secrets_read_policy: Refreshing state... [id=arn:aws:iam::759530261212:policy/lumora-ecommerce-prod-secrets-read-policy]
+module.ecr.aws_ecr_lifecycle_policy.lumora_flask: Refreshing state... [id=lumora-ecommerce-flask]
+module.eks[0].aws_iam_role_policy_attachment.eks_vpc_resource_controller: Refreshing state... [id=lumora-ecommerce-prod-eks-cluster-role-20261020104424386200000008]
+module.eks[0].aws_iam_role_policy_attachment.eks_cluster_policy: Refreshing state... [id=lumora-ecommerce-prod-eks-cluster-role-20261020104424027600000007]
+module.eks[0].aws_iam_role_policy_attachment.eks_worker_node_policy: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role-20261020104423350000000003]
+module.eks[0].aws_iam_role_policy_attachment.eks_ecr_readonly: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role-20261020104423767900000006]
+module.eks[0].aws_iam_role_policy_attachment.eks_ebs_csi: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role-20261020104423695300000005]
+module.eks[0].aws_iam_role_policy_attachment.eks_cni_policy: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role-20261020104423438000000004]
+module.jenkins.aws_iam_role_policy_attachment.jenkins_admin: Refreshing state... [id=lumora-ecommerce-prod-jenkins-role-20260901173048340300000001]
+module.jenkins.aws_iam_instance_profile.jenkins: Refreshing state... [id=lumora-ecommerce-prod-jenkins-profile]
+aws_iam_role_policy_attachment.eks_secrets_read[0]: Refreshing state... [id=lumora-ecommerce-prod-eks-node-role-20261020104424792300000009]
+module.ecr.aws_ecr_repository_policy.lumora_flask: Refreshing state... [id=lumora-ecommerce-flask]
+module.jenkins.data.aws_ami.ubuntu: Read complete after 0s [id=ami-02a9cdd4e98bc3c78]
+module.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-0bb2f637dc685f9f0]
+module.vpc.aws_internet_gateway.igw: Refreshing state... [id=igw-0875271f9384ca998]
+module.vpc.aws_route_table.restricted: Refreshing state... [id=rtb-01e2b217ae22e4255]
+module.vpc.aws_subnet.restricted[1]: Refreshing state... [id=subnet-02192928af23bd827]
+module.vpc.aws_subnet.restricted[0]: Refreshing state... [id=subnet-008f1af932a867a18]
+module.vpc.aws_subnet.private_compute[1]: Refreshing state... [id=subnet-03c00eead2a06931d]
+module.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0db95f224d26f53d3]
+module.vpc.aws_subnet.private_compute[0]: Refreshing state... [id=subnet-02321e32cb5c9c658]
+module.security_groups.aws_security_group.jenkins: Refreshing state... [id=sg-03cf99b06433cdfe3]
+module.security_groups.aws_security_group.alb: Refreshing state... [id=sg-0622f60e8cb9f74ca]
+module.vpc.aws_route_table.public: Refreshing state... [id=rtb-01f7c1bbfa3251725]
+module.vpc.aws_eip.nat[0]: Refreshing state... [id=eipalloc-0b7fe14dbd45e482e]
+module.security_groups.aws_security_group.eks_nodes: Refreshing state... [id=sg-0efb589cb7c709b73]
+module.vpc.aws_route_table_association.restricted[1]: Refreshing state... [id=rtbassoc-0f0fea4975e1e7a08]
+module.vpc.aws_route_table_association.restricted[0]: Refreshing state... [id=rtbassoc-0040f6d64746b77b4]
+module.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-08751552b54a19eb6]
+module.jenkins.aws_instance.jenkins: Refreshing state... [id=i-03e7a9837cadbced6]
+module.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-01b1f7426e208c4fc]
+module.security_groups.aws_security_group.mongodb: Refreshing state... [id=sg-076ae6e8ad45f0ecb]
+module.eks[0].aws_eks_cluster.main: Refreshing state... [id=lumora-ecommerce-prod]
+module.vpc.aws_nat_gateway.nat[0]: Refreshing state... [id=nat-04004d4eff6ab2c29]
+module.vpc.aws_route_table.private_compute: Refreshing state... [id=rtb-0cad8a97622f46730]
+module.vpc.aws_route_table_association.private_compute[0]: Refreshing state... [id=rtbassoc-0726a52a02652cf22]
+module.vpc.aws_route_table_association.private_compute[1]: Refreshing state... [id=rtbassoc-071ca7cac77145f23]
+module.eks[0].aws_eks_access_entry.jenkins: Refreshing state... [id=lumora-ecommerce-prod:arn:aws:iam::759530261212:role/lumora-ecommerce-prod-jenkins-role]
+module.eks[0].aws_eks_node_group.main: Refreshing state... [id=lumora-ecommerce-prod:lumora-ecommerce-prod-node-group]
+module.eks[0].data.tls_certificate.eks_oidc: Reading...
+module.eks[0].data.tls_certificate.eks_oidc: Read complete after 0s [id=b1b539daa206035ae3c3e28288b0681fa1b462f3]
+module.eks[0].aws_iam_openid_connect_provider.eks: Refreshing state... [id=arn:aws:iam::759530261212:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/DD8B136E53D2128E690757BFB59E2610]
+module.eks[0].aws_eks_access_policy_association.jenkins_admin: Refreshing state... [id=lumora-ecommerce-prod#arn:aws:iam::759530261212:role/lumora-ecommerce-prod-jenkins-role#arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy]
+module.jenkins.aws_eip.jenkins: Refreshing state... [id=eipalloc-02e78956124c3cb6c]
+module.jenkins.local_file.ansible_inventory: Refreshing state... [id=6e49742df12c7d6f9396bec12e07c546f6185df2]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the
+last "terraform apply" which may have affected this plan:
+
+  # module.jenkins.local_file.jenkins_private_key has been deleted
+  - resource "local_file" "jenkins_private_key" {
+      - filename             = "./../ansible/jenkins_key.pem" -> null
+        id                   = "57ca84c7cc982c8e4025dc7d27a472eba5cfcd0b"
+        # (9 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # module.ecr.aws_ecr_repository.lumora_flask will be updated in-place
+  ~ resource "aws_ecr_repository" "lumora_flask" {
+        id                   = "lumora-ecommerce-flask"
+      ~ image_tag_mutability = "MUTABLE" -> "IMMUTABLE"
+        name                 = "lumora-ecommerce-flask"
+        tags                 = {
+            "Name" = "lumora-ecommerce-prod-ecr"
+        }
+        # (4 unchanged attributes hidden)
+
+        # (2 unchanged blocks hidden)
+    }
+
+  # module.eks[0].aws_eks_node_group.main will be updated in-place
+  ~ resource "aws_eks_node_group" "main" {
+        id                     = "lumora-ecommerce-prod:lumora-ecommerce-prod-node-group"
+        tags                   = {
+            "Name" = "lumora-ecommerce-prod-node-group"
+        }
+        # (16 unchanged attributes hidden)
+
+      ~ scaling_config {
+          ~ desired_size = 3 -> 2
+          ~ max_size     = 3 -> 4
+            # (1 unchanged attribute hidden)
+        }
+
+        # (1 unchanged block hidden)
+    }
+
+  # module.jenkins.local_file.ansible_inventory will be created
+  + resource "local_file" "ansible_inventory" {
+      + content              = <<-EOT
+            [jenkins]
+            jenkins-server ansible_host=32.195.28.191
+            
+            [all:vars]
+            ansible_user=ubuntu
+            ansible_ssh_private_key_file={{ inventory_dir }}/../jenkins_key.pem
+            ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+        EOT
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "./../ansible/inventory/hosts.ini"
+      + id                   = (known after apply)
+    }
+
+  # module.jenkins.local_file.jenkins_private_key will be created
+  + resource "local_file" "jenkins_private_key" {
+      + content              = (sensitive value)
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0400"
+      + filename             = "./../ansible/jenkins_key.pem"
+      + id                   = (known after apply)
+    }
+
+Plan: 2 to add, 2 to change, 0 to destroy.
++ terraform show -no-color tfplan
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Archive Terraform Plan)
+[Pipeline] echo
+Archiving Terraform plan for review...
+[Pipeline] archiveArtifacts
+Archiving artifacts
+Recording fingerprints
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (FinOps: Cost Estimation)
+[Pipeline] echo
+Estimating AWS Infrastructure Cost via Infracost...
+[Pipeline] script
+[Pipeline] {
+[Pipeline] withCredentials
+Masking supported pattern matches of $INFRACOST_API_KEY
+[Pipeline] {
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/terraform
+[Pipeline] {
+[Pipeline] sh
++ export INFRACOST_NO_COLOR=true
++ export INFRACOST_SKIP_UPDATE_CHECK=true
++ export CI=true
++ export INFRACOST_CI=true
++ [ -n **** ]
++ [ **** != dummy ]
++ echo Injecting Infracost v2 authentication tokens...
+Injecting Infracost v2 authentication tokens...
++ export INFRACOST_API_KEY=****
++ export INFRACOST_CLI_AUTHENTICATION_TOKEN=****
++ export INFRACOST_CLI_ORG=thiagarajan-b
++ echo Running Infracost v2 cost estimation...
+Running Infracost v2 cost estimation...
++ timeout 45s infracost scan . --org thiagarajan-b
++ infracost inspect --group-by resource
++ [ -f ../infracost-report.txt ]
++ cat ../infracost-report.txt
+╭────────────────────────────────────────────╮
+│                                            │
+│   Scan Summary                             │
+│                                            │
+│   Resources:     51 (16 costed, 35 free)   │
+│   Monthly cost:  $158                      │
+│                                            │
+│   FinOps:        0                         │
+│   Tagging:       0                         │
+│   Guardrails:    0                         │
+│   Budgets:       0                         │
+│                                            │
+╰────────────────────────────────────────────╯
+
+What's next?
+  →  infracost inspect --group-by resource  Show every resource sorted by cost
+  →  infracost inspect --top 10  Show the 10 most expensive resources
+  →  infracost inspect --json  Re-run with full JSON output
+Resource                                                                  Count  Monthly Cost
+module.eks[0].aws_eks_cluster.main                                            1           $73
+module.eks[0].aws_eks_node_group.main                                         1           $34
+module.vpc.aws_nat_gateway.nat[0]                                             1           $33
+module.jenkins.aws_instance.jenkins                                           1           $18
+aws_secretsmanager_secret.app_secrets                                         1            $0
+module.vpc.aws_internet_gateway.igw                                           1            $0
+module.vpc.aws_route_table_association.restricted[0]                          1            $0
+module.jenkins.aws_key_pair.jenkins                                           1            $0
+module.security_groups.aws_security_group.alb                                 1            $0
+module.security_groups.aws_security_group.eks_nodes                           1            $0
+module.security_groups.aws_security_group.jenkins                             1            $0
+module.security_groups.aws_security_group.mongodb                             1            $0
+aws_budgets_budget.monthly_capstone_budget                                    1            $0
+module.vpc.aws_route_table.private_compute                                    1            $0
+module.vpc.aws_route_table.public                                             1            $0
+module.vpc.aws_route_table.restricted                                         1            $0
+module.vpc.aws_route_table_association.private_compute[0]                     1            $0
+module.vpc.aws_route_table_association.private_compute[1]                     1            $0
+module.vpc.aws_route_table_association.public[0]                              1            $0
+module.vpc.aws_route_table_association.public[1]                              1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_cluster_policy               1            $0
+module.vpc.aws_route_table_association.restricted[1]                          1            $0
+module.ecr.aws_ecr_repository_policy.lumora_flask                             1            $0
+module.eks[0].aws_eks_access_entry.jenkins                                    1            $0
+module.eks[0].aws_eks_access_policy_association.jenkins_admin                 1            $0
+module.eks[0].aws_iam_openid_connect_provider.eks                             1            $0
+module.eks[0].aws_iam_role.eks_cluster                                        1            $0
+module.jenkins.aws_iam_role_policy_attachment.jenkins_admin                   1            $0
+module.eks[0].aws_iam_role.eks_node_group                                     1            $0
+module.vpc.aws_subnet.restricted[1]                                           1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_ebs_csi                      1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_ecr_readonly                 1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_vpc_resource_controller      1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_worker_node_policy           1            $0
+module.jenkins.aws_eip.jenkins                                                1            $0
+module.vpc.aws_eip.nat[0]                                                     1            $0
+module.jenkins.aws_iam_role.jenkins                                           1            $0
+module.jenkins.aws_iam_instance_profile.jenkins                               1            $0
+module.vpc.aws_subnet.private_compute[0]                                      1            $0
+module.vpc.aws_subnet.private_compute[1]                                      1            $0
+module.vpc.aws_subnet.public[0]                                               1            $0
+module.vpc.aws_subnet.public[1]                                               1            $0
+module.vpc.aws_subnet.restricted[0]                                           1            $0
+module.eks[0].aws_iam_role_policy_attachment.eks_cni_policy                   1            $0
+module.vpc.aws_vpc.main                                                       1            $0
+module.eks[0].aws_cloudwatch_log_group.eks_cluster                            1            $0
+module.ecr.aws_ecr_repository.lumora_flask                                    1            $0
+module.ecr.aws_ecr_lifecycle_policy.lumora_flask                              1            $0
+aws_secretsmanager_secret_version.app_secrets_val                             1            $0
+aws_iam_role_policy_attachment.eks_secrets_read[0]                            1            $0
+aws_iam_policy.secrets_read_policy                                            1            $0
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] fileExists
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Apply Approval)
+Stage "Terraform Apply Approval" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Terraform Apply)
+Stage "Terraform Apply" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Ansible Configuration Check)
+[Pipeline] echo
+Running Ansible syntax verification...
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/ansible
+[Pipeline] {
+[Pipeline] sh
++ command -v ansible-playbook
++ echo Ansible detected. Validating playbook syntax using ansible.cfg...
+Ansible detected. Validating playbook syntax using ansible.cfg...
++ ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
+
+playbook: playbooks/setup_jenkins.yml
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Application Test (Pytest))
+[Pipeline] echo
+Executing automated unit tests...
+[Pipeline] sh
++ [ ! -d .venv ]
++ python3 -m venv .venv
++ [ -f .venv/bin/activate ]
++ . .venv/bin/activate
++ deactivate nondestructive
++ [ -n  ]
++ [ -n  ]
++ hash -r
++ [ -n  ]
++ unset VIRTUAL_ENV
++ unset VIRTUAL_ENV_PROMPT
++ [ ! nondestructive = nondestructive ]
++ [  = cygwin ]
++ [  = msys ]
++ export VIRTUAL_ENV=/var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/.venv
++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
++ PATH=/var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
++ export PATH
++ [ -n  ]
++ [ -z  ]
++ _OLD_VIRTUAL_PS1=$ 
++ PS1=(.venv) $ 
++ export PS1
++ VIRTUAL_ENV_PROMPT=(.venv) 
++ export VIRTUAL_ENV_PROMPT
++ hash -r
++ pip install --no-cache-dir -r requirements.txt
+Collecting Flask==3.1.1 (from -r requirements.txt (line 1))
+  Downloading flask-3.1.1-py3-none-any.whl.metadata (3.0 kB)
+Collecting pymongo==4.13.2 (from -r requirements.txt (line 2))
+  Downloading pymongo-4.13.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (22 kB)
+Collecting gunicorn==23.0.0 (from -r requirements.txt (line 3))
+  Downloading gunicorn-23.0.0-py3-none-any.whl.metadata (4.4 kB)
+Collecting mongomock==4.3.0 (from -r requirements.txt (line 4))
+  Downloading mongomock-4.3.0-py2.py3-none-any.whl.metadata (12 kB)
+Collecting pytest==8.3.5 (from -r requirements.txt (line 5))
+  Downloading pytest-8.3.5-py3-none-any.whl.metadata (7.6 kB)
+Collecting reportlab==4.2.5 (from -r requirements.txt (line 6))
+  Downloading reportlab-4.2.5-py3-none-any.whl.metadata (1.5 kB)
+Collecting flake8==7.2.0 (from -r requirements.txt (line 7))
+  Downloading flake8-7.2.0-py2.py3-none-any.whl.metadata (3.8 kB)
+Collecting prometheus-client==0.23.1 (from -r requirements.txt (line 8))
+  Downloading prometheus_client-0.23.1-py3-none-any.whl.metadata (1.9 kB)
+Collecting blinker>=1.9.0 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting click>=8.1.3 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting itsdangerous>=2.2.0 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting jinja2>=3.1.2 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting markupsafe>=2.1.1 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting werkzeug>=3.1.0 (from Flask==3.1.1->-r requirements.txt (line 1))
+  Downloading werkzeug-3.1.9-py3-none-any.whl.metadata (4.1 kB)
+Collecting dnspython<3.0.0,>=1.16.0 (from pymongo==4.13.2->-r requirements.txt (line 2))
+  Downloading dnspython-2.9.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting packaging (from gunicorn==23.0.0->-r requirements.txt (line 3))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pytz (from mongomock==4.3.0->-r requirements.txt (line 4))
+  Downloading pytz-2026.5-py2.py3-none-any.whl.metadata (22 kB)
+Collecting sentinels (from mongomock==4.3.0->-r requirements.txt (line 4))
+  Downloading sentinels-1.1.1-py3-none-any.whl.metadata (3.0 kB)
+Collecting iniconfig (from pytest==8.3.5->-r requirements.txt (line 5))
+  Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+Collecting pluggy<2,>=1.5 (from pytest==8.3.5->-r requirements.txt (line 5))
+  Downloading pluggy-1.7.0-py3-none-any.whl.metadata (5.0 kB)
+Collecting pillow>=9.0.0 (from reportlab==4.2.5->-r requirements.txt (line 6))
+  Downloading pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting chardet (from reportlab==4.2.5->-r requirements.txt (line 6))
+  Downloading chardet-7.7.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+Collecting mccabe<0.8.0,>=0.7.0 (from flake8==7.2.0->-r requirements.txt (line 7))
+  Downloading mccabe-0.7.0-py2.py3-none-any.whl.metadata (5.0 kB)
+Collecting pycodestyle<2.14.0,>=2.13.0 (from flake8==7.2.0->-r requirements.txt (line 7))
+  Downloading pycodestyle-2.13.0-py2.py3-none-any.whl.metadata (4.5 kB)
+Collecting pyflakes<3.4.0,>=3.3.0 (from flake8==7.2.0->-r requirements.txt (line 7))
+  Downloading pyflakes-3.3.2-py2.py3-none-any.whl.metadata (3.5 kB)
+Downloading flask-3.1.1-py3-none-any.whl (103 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.3/103.3 kB 12.2 MB/s eta 0:00:00
+Downloading pymongo-4.13.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 53.9 MB/s eta 0:00:00
+Downloading gunicorn-23.0.0-py3-none-any.whl (85 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 85.0/85.0 kB 249.7 MB/s eta 0:00:00
+Downloading mongomock-4.3.0-py2.py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.9/64.9 kB 282.1 MB/s eta 0:00:00
+Downloading pytest-8.3.5-py3-none-any.whl (343 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 343.6/343.6 kB 337.4 MB/s eta 0:00:00
+Downloading reportlab-4.2.5-py3-none-any.whl (1.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 306.5 MB/s eta 0:00:00
+Downloading flake8-7.2.0-py2.py3-none-any.whl (57 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.8/57.8 kB 228.2 MB/s eta 0:00:00
+Downloading prometheus_client-0.23.1-py3-none-any.whl (61 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.1/61.1 kB 296.0 MB/s eta 0:00:00
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading click-8.5.0-py3-none-any.whl (125 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 325.7 MB/s eta 0:00:00
+Downloading dnspython-2.9.0-py3-none-any.whl (354 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 354.8/354.8 kB 339.0 MB/s eta 0:00:00
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 317.5 MB/s eta 0:00:00
+Downloading markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading mccabe-0.7.0-py2.py3-none-any.whl (7.3 kB)
+Downloading pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 243.6 MB/s eta 0:00:00
+Downloading pluggy-1.7.0-py3-none-any.whl (27 kB)
+Downloading pycodestyle-2.13.0-py2.py3-none-any.whl (31 kB)
+Downloading pyflakes-3.3.2-py2.py3-none-any.whl (63 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.2/63.2 kB 285.9 MB/s eta 0:00:00
+Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 228.7/228.7 kB 318.2 MB/s eta 0:00:00
+Downloading chardet-7.7.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 353.2 MB/s eta 0:00:00
+Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.0/130.0 kB 306.5 MB/s eta 0:00:00
+Downloading pytz-2026.5-py2.py3-none-any.whl (506 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 506.3/506.3 kB 346.6 MB/s eta 0:00:00
+Downloading sentinels-1.1.1-py3-none-any.whl (3.7 kB)
+Installing collected packages: pytz, sentinels, pyflakes, pycodestyle, prometheus-client, pluggy, pillow, packaging, mccabe, markupsafe, itsdangerous, iniconfig, dnspython, click, chardet, blinker, werkzeug, reportlab, pytest, pymongo, mongomock, jinja2, gunicorn, flake8, Flask
+Successfully installed Flask-3.1.1 blinker-1.9.0 chardet-7.7.0 click-8.5.0 dnspython-2.9.0 flake8-7.2.0 gunicorn-23.0.0 iniconfig-2.3.1 itsdangerous-2.2.0 jinja2-3.1.6 markupsafe-3.0.4 mccabe-0.7.0 mongomock-4.3.0 packaging-26.3 pillow-13.0.0 pluggy-1.7.0 prometheus-client-0.23.1 pycodestyle-2.13.0 pyflakes-3.3.2 pymongo-4.13.2 pytest-8.3.5 pytz-2026.5 reportlab-4.2.5 sentinels-1.1.1 werkzeug-3.1.9
++ pytest tests/ -v
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.7.0 -- /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline
+collecting ... collected 6 items
+
+tests/test_app.py::test_health PASSED                                    [ 16%]
+tests/test_app.py::test_products_api_has_seed_data PASSED                [ 33%]
+tests/test_phase5.py::test_forgot_password_creates_token PASSED          [ 50%]
+tests/test_phase5.py::test_admin_reports_requires_admin PASSED           [ 66%]
+tests/test_phase5.py::test_review_requires_purchase PASSED               [ 83%]
+tests/test_phase5.py::test_health_endpoint PASSED                        [100%]
+
+=============================== warnings summary ===============================
+tests/test_app.py::test_health
+  /var/lib/jenkins/workspace/hv-ecommerce-devops-pipeline/.venv/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    haveNameConstant = hasattr(ast,'NameConstant')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 6 passed, 1 warning in 1.44s =========================
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Docker Build)
+[Pipeline] echo
+Building Docker image: lumora-ecommerce-flask:44...
+[Pipeline] sh
++ docker build -t lumora-ecommerce-flask:44 -t lumora-ecommerce-flask:latest .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  372.7kB
+Step 1/13 : FROM python:3.12-slim
+ ---> 05cda9777409
+Step 2/13 : WORKDIR /app
+ ---> Using cache
+ ---> f3df9f9107fd
+Step 3/13 : ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ ---> Using cache
+ ---> 4077908ce3a8
+Step 4/13 : COPY requirements.txt .
+ ---> Using cache
+ ---> f7e969ddf2e6
+Step 5/13 : RUN pip install --no-cache-dir -r requirements.txt
+ ---> Using cache
+ ---> dc2c50abe947
+Step 6/13 : COPY . .
+ ---> f4abe4d76daf
+Step 7/13 : RUN useradd -m appuser && chown -R appuser:appuser /app
+ ---> Running in cbccf8ba43a6
+ ---> Removed intermediate container cbccf8ba43a6
+ ---> 94a54d694230
+Step 8/13 : ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
+ ---> Running in e34718a0bb7d
+ ---> Removed intermediate container e34718a0bb7d
+ ---> ff2eda37c907
+Step 9/13 : RUN mkdir -p /tmp/prometheus_multiproc     && chown -R appuser:appuser /tmp/prometheus_multiproc
+ ---> Running in 9f6d97794ee2
+ ---> Removed intermediate container 9f6d97794ee2
+ ---> 646eea88d456
+Step 10/13 : USER appuser
+ ---> Running in 1b3fd9a18c0e
+ ---> Removed intermediate container 1b3fd9a18c0e
+ ---> 028e4f2639eb
+Step 11/13 : EXPOSE 5000
+ ---> Running in 967e1f8f1236
+ ---> Removed intermediate container 967e1f8f1236
+ ---> 1a2b770d4b74
+Step 12/13 : HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
+ ---> Running in 1487362da687
+ ---> Removed intermediate container 1487362da687
+ ---> b03da34a0a8b
+Step 13/13 : CMD ["gunicorn", "--config", "gunicorn.conf.py", "--bind", "0.0.0.0:5000", "--workers", "2", "run:app"]
+ ---> Running in cd75bc5af60e
+ ---> Removed intermediate container cd75bc5af60e
+ ---> a2bb97c6bbcd
+Successfully built a2bb97c6bbcd
+Successfully tagged lumora-ecommerce-flask:44
+Successfully tagged lumora-ecommerce-flask:latest
++ docker images
++ grep lumora-ecommerce-flask
+WARNING: This output is designed for human readability. For machine-readable output, please use --format.
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:12       75da4d77a248        268MB         69.2MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:13       f3b7fd4fd854        269MB         69.4MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:14       d93e1f72ba43        264MB         63.9MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:15       e4e45b0c0109        264MB         63.9MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:16       079a45e51ff6        264MB         63.9MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:17       24b16df17eb1        264MB         63.9MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:18       ef7ddc570af8        264MB         63.9MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:19       758f86f380fe        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:20       18f14ec07a7a        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:21       863736a49536        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:22       b96b20cdcd8c        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:23       6c7c8bbdf675        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:24       fa2a131abafd        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:25       fad353204b02        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:26       158b8ce259b3        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:27       df2c5e2e1ad2        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:28       c06d5e56f768        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:29       47621fcf83d0        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:30       e0c816bfc053        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:31       5073edb80056        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:32       40205291fa10        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:33       450c89087a65        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:34       d242d4452893        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:35       97795fe3e0b9        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:36       5da1d9df58d0        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:37       88ce44b0b73b        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:38       3e9d17d9aa97        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:39       1311d8e8a8f9        265MB         64.1MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:42       6273ffbb6b2b        266MB         64.2MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:43       72325dfd8e13        266MB         64.2MB        
+759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest   72325dfd8e13        266MB         64.2MB        
+lumora-ecommerce-flask:12                                                    75da4d77a248        268MB         69.2MB        
+lumora-ecommerce-flask:13                                                    f3b7fd4fd854        269MB         69.4MB        
+lumora-ecommerce-flask:14                                                    d93e1f72ba43        264MB         63.9MB        
+lumora-ecommerce-flask:15                                                    e4e45b0c0109        264MB         63.9MB        
+lumora-ecommerce-flask:16                                                    079a45e51ff6        264MB         63.9MB        
+lumora-ecommerce-flask:17                                                    24b16df17eb1        264MB         63.9MB        
+lumora-ecommerce-flask:18                                                    ef7ddc570af8        264MB         63.9MB        
+lumora-ecommerce-flask:19                                                    758f86f380fe        265MB         64.1MB        
+lumora-ecommerce-flask:20                                                    18f14ec07a7a        265MB         64.1MB        
+lumora-ecommerce-flask:21                                                    863736a49536        265MB         64.1MB        
+lumora-ecommerce-flask:22                                                    b96b20cdcd8c        265MB         64.1MB        
+lumora-ecommerce-flask:23                                                    6c7c8bbdf675        265MB         64.1MB        
+lumora-ecommerce-flask:24                                                    fa2a131abafd        265MB         64.1MB        
+lumora-ecommerce-flask:25                                                    fad353204b02        265MB         64.1MB        
+lumora-ecommerce-flask:26                                                    158b8ce259b3        265MB         64.1MB        
+lumora-ecommerce-flask:27                                                    df2c5e2e1ad2        265MB         64.1MB        
+lumora-ecommerce-flask:28                                                    c06d5e56f768        265MB         64.1MB        
+lumora-ecommerce-flask:29                                                    47621fcf83d0        265MB         64.1MB        
+lumora-ecommerce-flask:30                                                    e0c816bfc053        265MB         64.1MB        
+lumora-ecommerce-flask:31                                                    5073edb80056        265MB         64.1MB        
+lumora-ecommerce-flask:32                                                    40205291fa10        265MB         64.1MB        
+lumora-ecommerce-flask:33                                                    450c89087a65        265MB         64.1MB        
+lumora-ecommerce-flask:34                                                    d242d4452893        265MB         64.1MB        
+lumora-ecommerce-flask:35                                                    97795fe3e0b9        265MB         64.1MB        
+lumora-ecommerce-flask:36                                                    5da1d9df58d0        265MB         64.1MB        
+lumora-ecommerce-flask:37                                                    88ce44b0b73b        265MB         64.1MB        
+lumora-ecommerce-flask:38                                                    3e9d17d9aa97        265MB         64.1MB        
+lumora-ecommerce-flask:39                                                    1311d8e8a8f9        265MB         64.1MB        
+lumora-ecommerce-flask:42                                                    6273ffbb6b2b        266MB         64.2MB        
+lumora-ecommerce-flask:43                                                    72325dfd8e13        266MB         64.2MB        
+lumora-ecommerce-flask:44                                                    a2bb97c6bbcd        266MB         64.2MB        
+lumora-ecommerce-flask:latest                                                a2bb97c6bbcd        266MB         64.2MB        
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Trivy Container Security Scan)
+[Pipeline] echo
+Scanning container image for vulnerabilities using Trivy...
+[Pipeline] sh
++ command -v trivy
++ echo Notice: Trivy is not installed on this runner. Skipping image vulnerability scan.
+Notice: Trivy is not installed on this runner. Skipping image vulnerability scan.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Push Docker Image to AWS ECR)
+[Pipeline] echo
+Authenticating Docker to ECR and pushing image to 759530261212.dkr.ecr.us-east-1.amazonaws.com...
+[Pipeline] sh
++ aws ecr get-login-password --region us-east-1
++ docker login --username AWS --password-stdin 759530261212.dkr.ecr.us-east-1.amazonaws.com
+
+WARNING! Your credentials are stored unencrypted in '/var/lib/jenkins/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
++ docker tag lumora-ecommerce-flask:44 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:44
++ docker tag lumora-ecommerce-flask:latest 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest
++ docker push 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:44
+The push refers to repository [759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask]
+6912e23eb445: Layer already exists
+e25a5f7a7ebd: Waiting
+3b9b17c0dde1: Layer already exists
+75b6a36c64a1: Layer already exists
+14997c042462: Layer already exists
+bbc5a1223747: Layer already exists
+ecc510c1e359: Layer already exists
+5ca5437fde13: Waiting
+d88c431dfa09: Layer already exists
+ac58b3290b7d: Waiting
+ac58b3290b7d: Pushed
+e25a5f7a7ebd: Pushed
+5ca5437fde13: Pushed
+44: digest: sha256:a2bb97c6bbcd33687db880fd3ebe59d2a7a5a788768cc35e22ff896384984b10 size: 2488
++ docker push 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest
+The push refers to repository [759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask]
+5ca5437fde13: Layer already exists
+e25a5f7a7ebd: Layer already exists
+bbc5a1223747: Layer already exists
+3b9b17c0dde1: Layer already exists
+d88c431dfa09: Layer already exists
+ac58b3290b7d: Layer already exists
+ecc510c1e359: Layer already exists
+75b6a36c64a1: Layer already exists
+6912e23eb445: Layer already exists
+14997c042462: Layer already exists
+latest: digest: sha256:a2bb97c6bbcd33687db880fd3ebe59d2a7a5a788768cc35e22ff896384984b10 size: 2488
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to EKS & Setup Metrics Server)
+[Pipeline] sh
++ aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query cluster.status --output text
++ grep -q ACTIVE
+[Pipeline] echo
+EKS Cluster is ACTIVE. Deploying Metrics Server and Workloads...
+[Pipeline] sh
++ chmod +x scripts/setup_metrics_server.sh
++ ./scripts/setup_metrics_server.sh
+🔌 Connecting kubectl to EKS cluster: lumora-ecommerce-prod in us-east-1...
+Updated context arn:aws:eks:us-east-1:759530261212:cluster/lumora-ecommerce-prod in /var/lib/jenkins/.kube/config
+[0;32mKubernetes control plane[0m is running at [0;33mhttps://DD8B136E53D2128E690757BFB59E2610.gr7.us-east-1.eks.amazonaws.com[0m
+[0;32mCoreDNS[0m is running at [0;33mhttps://DD8B136E53D2128E690757BFB59E2610.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy[0m
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+==========================================================
+ 🩺 [HPA Pre-flight] Checking Kubernetes Metrics Server
+==========================================================
+✅ Metrics Server API (v1beta1.metrics.k8s.io) is already registered.
+⏳ Waiting for Metrics Server pod rollout in 'kube-system' namespace...
+deployment "metrics-server" successfully rolled out
+⏳ Warming up initial metrics scrape...
+✅ Metrics Server is actively reporting node metrics:
+NAME                         CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+ip-10-0-54-45.ec2.internal   85m          4%     1024Mi          71%       
+ip-10-0-59-10.ec2.internal   89m          4%     873Mi           60%       
+ip-10-0-75-24.ec2.internal   107m         5%     1058Mi          73%       
+==========================================================
+ 🔐 [Secrets CSI Pre-flight] Checking Secrets Store CSI Driver
+==========================================================
+✅ Secrets Store CSI Driver (secretproviderclasses CRD) is already registered.
+==========================================================
+ 🎉 Cluster Pre-flight Complete! Metrics & Secrets CSI Ready.
+==========================================================
++ kubectl apply -k k8s/
+namespace/lumora-prod unchanged
+resourcequota/lumora-prod-quota configured
+configmap/flask-config unchanged
+service/flask-service configured
+service/mongodb-service unchanged
+deployment.apps/flask-app unchanged
+statefulset.apps/mongodb configured
+horizontalpodautoscaler.autoscaling/flask-app-hpa unchanged
+ingress.networking.k8s.io/flask-ingress unchanged
+secretproviderclass.secrets-store.csi.x-k8s.io/aws-secrets-provider unchanged
++ kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
+deployment "flask-app" successfully rolled out
++ kubectl get hpa -n lumora-prod
+NAME            REFERENCE              TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+flask-app-hpa   Deployment/flask-app   cpu: 2%/70%, memory: 66%/80%   2         5         2          2d
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] echo
+Pipeline execution completed.
+[Pipeline] deleteDir
+[Pipeline] echo
+Terraform Jenkins Pipeline executed successfully!
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

@@ -30,10 +30,9 @@ The application runs on a managed Amazon EKS cluster deployed across private sub
 | **Storage Driver** | AWS EBS CSI Driver (`aws-ebs-csi-driver`) | Dynamic volume provisioning backed by Amazon EBS `gp3` |
 | **Cost Toggle** | `enable_eks = false` (default) | Pauses control plane and nodes to preserve budget when idle |
 
-> **Screenshot Placement: EKS Cluster Nodes Status in AWS Console**  
-> *Insert Here*: Screenshot from AWS EKS Console -> Compute tab showing the Managed Node Group with 2 active `t3.small` instances in `Ready` status running Kubernetes v1.36.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/01_eks_nodes_active.png`  
-> *Markdown Embed Syntax*: `![EKS Nodes Active in Console](../project_artifacts/screenshots/kubernetes/01_eks_nodes_active.png)`
+| EKS Cluster Overview Dashboard | EKS IAM Cluster Access Entries |
+| :---: | :---: |
+| ![EKS Dashboard](../project_artifacts/screenshots/aws/eks_dashboard.png) | ![EKS Access Entries](../project_artifacts/screenshots/aws/eks_access.png) |
 
 ---
 
@@ -71,15 +70,13 @@ k8s/
 - **Headless Service**: `clusterIP: None` enabling direct DNS resolution to the database pod (`mongodb-service.lumora-prod.svc.cluster.local:27017`).
 - **Volume Claim Template**: Allocates 10 GiB Amazon EBS `gp3` storage with `accessModes: ["ReadWriteOnce"]` mounted to `/data/db`.
 
-> **Screenshot Placement: Kubernetes Workloads Running in `lumora-prod`**  
-> *Insert Here*: Terminal output of `kubectl get all -n lumora-prod` showing active `pod/flask-app-*`, `pod/mongodb-0`, `service/flask-service`, and `deployment.apps/flask-app`.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png`  
-> *Markdown Embed Syntax*: `![Kubernetes Workloads in lumora-prod](../project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png)`
+| EKS Workload Health Status | Kubernetes Workloads in `lumora-prod` |
+| :---: | :---: |
+| ![EKS Workload Health](../project_artifacts/screenshots/aws/eks_workload_status.png) | ![Kubernetes Workloads](../project_artifacts/screenshots/kubernetes/02_kubectl_get_all.png) |
 
-> **Screenshot Placement: PersistentVolumeClaim & EBS gp3 Bound Status**  
-> *Insert Here*: Terminal output of `kubectl get pvc,pv -n lumora-prod` showing `mongo-storage-mongodb-0` in `Bound` status attached to the 10 GiB EBS volume.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/03_pvc_bound_status.png`  
-> *Markdown Embed Syntax*: `![PersistentVolumeClaim Bound](../project_artifacts/screenshots/kubernetes/03_pvc_bound_status.png)`
+| Production Pods Console | StatefulSets & Persistent Volumes |
+| :---: | :---: |
+| ![EKS Pods](../project_artifacts/screenshots/aws/eks_pods.png) | ![EKS StatefulSets](../project_artifacts/screenshots/aws/eks_statefulsets.png) |
 
 ---
 
@@ -189,10 +186,7 @@ spec:
 - As traffic normalizes, the HPA gradually scales down to the baseline of 2 pods.
 - The Kubernetes Metrics Server is pre-flight validated by [scripts/setup_metrics_server.sh](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/scripts/setup_metrics_server.sh) before the HPA is applied.
 
-> **Screenshot Placement: HPA Autoscaler Status with Live Resource Metrics**  
-> *Insert Here*: Terminal output of `kubectl get hpa -n lumora-prod` showing active targets reporting real percentages alongside min/max pod thresholds.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/04_hpa_active_metrics.png`  
-> *Markdown Embed Syntax*: `![HPA Active Metrics Proof](../project_artifacts/screenshots/kubernetes/04_hpa_active_metrics.png)`
+![HPA Active Metrics Proof](../project_artifacts/screenshots/kubernetes/04_hpa_active_metrics.png)
 
 ---
 
@@ -231,9 +225,8 @@ spec:
 - `target-type: ip`: Enables the ALB to route directly to pod IP addresses across private subnets, bypassing `NodePort` latency.
 - Public requests arriving at port 80 are load-balanced across all healthy application pods.
 
-> **Screenshot Placement: Live E-Commerce Storefront via ALB Ingress**  
-> *Insert Here*: Browser screenshot showing the Lumora storefront loaded via the public AWS ALB DNS name, displaying products and system health.  
-> *Target Image File*: `project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png`  
-> *Markdown Embed Syntax*: `![Lumora Storefront Live](../project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png)`
+| AWS Application Load Balancer Console | Live Storefront Ingress Endpoint |
+| :---: | :---: |
+| ![AWS ALB](../project_artifacts/screenshots/aws/alb.png) | ![Lumora Storefront Live](../project_artifacts/screenshots/kubernetes/05_alb_ingress_storefront.png) |
 
 

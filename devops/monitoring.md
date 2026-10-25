@@ -7,10 +7,12 @@ This document outlines the observability, metrics collection, and alerting archi
 ## Table of Contents
 
 1. [Observability Strategy and SRE Principles](#1-observability-strategy-and-sre-principles)
-2. [Automated Metrics Server Bootstrap with In-Context Verification](#2-automated-metrics-server-bootstrap-with-in-context-verification)
-3. [Prometheus Architecture and Scraping Targets with Target Proof](#3-prometheus-architecture-and-scraping-targets-with-target-proof)
-4. [Grafana KPI Dashboards with In-Context Visuals](#4-grafana-kpi-dashboards-with-in-context-visuals)
-5. [Alertmanager Rules and Notification Routing with Alert Delivery Proof](#5-alertmanager-rules-and-notification-routing-with-alert-delivery-proof)
+2. [Application Health Probes Codified in Python](#2-application-health-probes-codified-in-python)
+3. [Kubernetes Pod Health Probes in Manifests](#3-kubernetes-pod-health-probes-in-manifests)
+4. [Automated Metrics Server Bootstrap](#4-automated-metrics-server-bootstrap)
+5. [Prometheus Helm Values & Scraping Specification](#5-prometheus-helm-values--scraping-specification)
+6. [PrometheusRule Alerting Definitions as Code](#6-prometheusrule-alerting-definitions-as-code)
+7. [Grafana Dashboards Codified in JSON](#7-grafana-dashboards-codified-in-json)
 
 ---
 
@@ -24,7 +26,62 @@ The monitoring framework follows the Google Site Reliability Engineering (SRE) *
 
 ---
 
-## 2. Automated Metrics Server Bootstrap with In-Context Verification
+## 2. Application Health Probes Codified in Python
+
+Observability begins at the application layer. Rather than treating the Flask application as a black box, the codebase provides structured health diagnostics:
+
+From [`app/routes.py`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/app/routes.py):
+```python
+@bp.get("/health")
+@bp.get("/health/live")
+def health_live():
+    """Liveness probe: verifies that the web process is running."""
+    return {"status": "UP", "service": "hv-ecommerce"}, 200
+
+
+@bp.get("/health/ready")
+def health_ready():
+    """Readiness probe: verifies database connectivity safely."""
+    try:
+        current_app.db.command("ping")
+        return {"status": "READY", "database": "connected"}, 200
+    except Exception as e:
+        return {"status": "DEGRADED", "database": str(e)}, 503
+```
+
+### Architectural Rationale:
+- **Liveness (`/health`, `/health/live`)**: Returns HTTP 200 if the Gunicorn worker thread is unblocked. If an unhandled thread deadlock occurs, the liveness check fails, prompting Kubernetes to restart the container.
+- **Readiness (`/health/ready`)**: Actively tests downstream database connectivity by executing a lightweight MongoDB `ping` command. If MongoDB is temporarily partitioned or re-electing a primary, the probe returns HTTP 503 (`DEGRADED`), preventing the ALB from directing user traffic to a pod that cannot complete transactions.
+
+---
+
+## 3. Kubernetes Pod Health Probes in Manifests
+
+The Python endpoints are coupled to the Kubernetes control plane via probe definitions in the deployment manifest:
+
+From [`k8s/03-flask-deployment.yml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/k8s/03-flask-deployment.yml):
+```yaml
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+```
+
+---
+
+## 4. Automated Metrics Server Bootstrap
 
 Kubernetes Horizontal Pod Autoscaling (HPA) requires an active resource metrics pipeline. We automate this pre-flight check in [scripts/setup_metrics_server.sh](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/scripts/setup_metrics_server.sh):
 
@@ -44,103 +101,126 @@ kubectl top nodes
 
 This script runs automatically during the Jenkins pipeline Stage 16 prior to deploying application workloads.
 
-> **Screenshot Placement: Kubernetes Metrics Server Verification CLI**  
-> *Insert Here*: Terminal output of `kubectl top nodes` and `kubectl top pods -n lumora-prod` demonstrating active CPU and RAM collection.  
-> *Target Image File*: `project_artifacts/screenshots/monitoring/01_metrics_server_nodes.png`  
-> *Markdown Embed Syntax*: `![Metrics Server Verification](../project_artifacts/screenshots/monitoring/01_metrics_server_nodes.png)`
-
 ---
 
-## 3. Prometheus Architecture and Scraping Targets with Target Proof
+## 5. Prometheus Helm Values & Scraping Specification
 
-The monitoring tier uses Prometheus deployed via the official `kube-prometheus-stack` Helm chart. It monitors three distinct operational layers:
-- **Application Layer**: Flask `/metrics` endpoint (request durations, status code distributions, and active sessions).
-- **Cluster & Pod Layer**: `kube-state-metrics` (deployment health, pod restart counts, and persistent volume statuses).
-- **Host & Node Layer**: `node-exporter` (EC2 worker node CPU, memory pressure, and EBS disk I/O).
+Prometheus is deployed into the `monitoring` namespace using the `kube-prometheus-stack` Helm chart. The deployment is tuned for efficient resource usage on AWS EKS:
 
-### Scraping Configurations:
-- **Scrape Interval**: 15 seconds across all targets.
-- **Evaluation Interval**: 15 seconds for rapid alert detection.
-- **ServiceMonitor**: Automatically discovers Flask pods in `lumora-prod` labeled `app: flask-app`.
-
-> **Screenshot Placement: Prometheus Web Console Active Scraping Targets**  
-> *Insert Here*: Web browser screenshot of Prometheus (`:9090/targets`) displaying healthy endpoints (`1/1 UP`) across Flask endpoints, node-exporter, and kube-state-metrics.  
-> *Target Image File*: `project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png`  
-> *Markdown Embed Syntax*: `![Prometheus Active Scraping Targets](../project_artifacts/screenshots/monitoring/02_prometheus_targets_up.png)`
-
----
-
-## 4. Grafana KPI Dashboards with In-Context Visuals
-
-Grafana visualizes Prometheus metrics through two dedicated dashboards:
-
-### 4.1. Dashboard 1: Application Performance & Business KPIs
-- **Throughput Panel**: Real-time HTTP requests per second across `/`, `/shop`, `/checkout`.
-- **Response Latency (P50, P95, P99)**: Millisecond duration percentiles to monitor end-user experience.
-- **HTTP Error Rate**: Stacked area chart showing ratio of 200 OK vs 500 Internal Server Errors.
-- **Database Transaction Latency**: Time spent servicing MongoDB queries via `pymongo`.
-
-> **Screenshot Placement: Grafana Application KPI Dashboard**  
-> *Insert Here*: Full Grafana dashboard showing graphs for HTTP throughput (RPS), P95 response latency, order rate, and 4xx/5xx status ratios.  
-> *Target Image File*: `project_artifacts/screenshots/monitoring/03_grafana_app_kpi.png`  
-> *Markdown Embed Syntax*: `![Grafana Application KPI Dashboard](../project_artifacts/screenshots/monitoring/03_grafana_app_kpi.png)`
-
-### 4.2. Dashboard 2: Kubernetes Infrastructure & Node Saturation
-- **Pod CPU & Memory Utilization**: Live consumption charted against pod `requests` and `limits`.
-- **HPA Scaling Activity**: Visual correlation between CPU spikes and pod replica expansion.
-- **Node Saturation**: Worker node CPU load average and memory pressure.
-- **EBS Disk Utilization**: Storage space used on `mongodb-0` 10 GiB EBS volume.
-
-> **Screenshot Placement: Grafana Kubernetes Infrastructure Saturation Dashboard**  
-> *Insert Here*: Full Grafana dashboard showing EKS worker node CPU/memory load, pod memory limit consumption, and active HPA pod scaling curves.  
-> *Target Image File*: `project_artifacts/screenshots/monitoring/04_grafana_cluster_infra.png`  
-> *Markdown Embed Syntax*: `![Grafana Cluster Saturation Dashboard](../project_artifacts/screenshots/monitoring/04_grafana_cluster_infra.png)`
-
----
-
-## 5. Alertmanager Rules and Notification Routing with Alert Delivery Proof
-
-Alertmanager evaluates metrics continuously and dispatches notifications when thresholds are breached:
-
+From [`monitoring/prometheus-values.yaml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/monitoring/prometheus-values.yaml):
 ```yaml
-groups:
-  - name: lumora_critical_alerts
-    rules:
-      - alert: HighHttpErrorRate
-        expr: rate(flask_http_request_total{status=~"5.."}[5m]) / rate(flask_http_request_total[5m]) * 100 > 5
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Flask Application High Error Rate"
-          description: "HTTP 5xx error rate exceeded 5% over the last 5 minutes."
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        memory: 1Gi
+    storageSpec:
+      emptyDir: {}
 
-      - alert: PodCrashLooping
-        expr: rate(kube_pod_container_status_restarts_total{namespace="lumora-prod"}[15m]) > 0
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Container CrashLoop Detected in lumora-prod"
-          description: "Pod {{ $labels.pod }} restarted multiple times."
+grafana:
+  enabled: false
 
-      - alert: NodeMemorySaturation
-        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "EKS Worker Node Memory Near Exhaustion"
-          description: "Worker node memory usage exceeded 85%."
+alertmanager:
+  enabled: false
 ```
 
-### Notification Routing:
-- **Slack Integration**: Webhook notification posted to `#lumora-devops-alerts`.
-- **Email Notification**: Amazon SNS topic sending alerts to the core engineering team.
+- **Scrape Interval (30s)**: Balances real-time metric fidelity with network/CPU overhead on `t3.small` worker nodes.
+- **Resource Limits (1Gi)**: Enforces memory boundaries to prevent the monitoring agent from triggering node OOM conditions.
+- **Retention (2d)**: Right-sized for capstone execution and sprint demonstrations without exhausting EBS disk capacity.
 
-> **Screenshot Placement: Alertmanager Notification in Slack / Email Channel**  
-> *Insert Here*: Screenshot of an alert card delivered to Slack or email showing alert severity, description, impacted pod name, and trigger timestamp.  
-> *Target Image File*: `project_artifacts/screenshots/monitoring/05_alertmanager_notification.png`  
-> *Markdown Embed Syntax*: `![Alertmanager Delivered Notification](../project_artifacts/screenshots/monitoring/05_alertmanager_notification.png)`
+---
 
+## 6. PrometheusRule Alerting Definitions as Code
 
+Alert rules are declared as Kubernetes Custom Resources (`kind: PrometheusRule`) and managed under Git version control:
+
+From [`monitoring/application-alerts.yaml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/monitoring/application-alerts.yaml):
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lumora-application-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: lumora.infrastructure.alerts
+      rules:
+        # 1. Host CPU Saturation Alert
+        - alert: EKSNodeHighCPU
+          expr: |
+            100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 80
+          for: 5m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "High CPU usage on {{ $labels.instance }}"
+            description: "Node CPU utilization has exceeded 80% for 5 minutes."
+
+        # 2. Host RAM Exhaustion Alert
+        - alert: EKSNodeHighMemory
+          expr: |
+            100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 85
+          for: 5m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "High memory usage on {{ $labels.instance }}"
+            description: "Node memory utilization has exceeded 85% for 5 minutes."
+
+        # 3. Pod Health & Readiness Failure
+        - alert: FlaskPodNotReady
+          expr: |
+            kube_pod_status_ready{namespace="lumora-prod", pod=~"flask-app-.*", condition="true"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            project: lumora
+          annotations:
+            summary: "Flask pod {{ $labels.pod }} is not ready"
+            description: "The Flask application pod has remained unready for 2 minutes."
+
+        # 4. CrashLoopBackOff / Frequent Restarts
+        - alert: FlaskFrequentRestarts
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="lumora-prod", container="lumora-ecommerce"}[15m]) > 3
+          for: 2m
+          labels:
+            severity: warning
+            project: lumora
+          annotations:
+            summary: "Frequent restarts for {{ $labels.pod }}"
+            description: "The Flask container has restarted more than 3 times in 15 minutes."
+
+        # 5. Blackhole / Complete Service Unavailability
+        - alert: FlaskApplicationDown
+          expr: |
+            (up{namespace="lumora-prod", service="flask-service"} == 0) or (absent(up{namespace="lumora-prod", service="flask-service"}))
+          for: 2m
+          labels:
+            severity: critical
+            project: lumora
+          annotations:
+            summary: "Flask application metrics target unavailable"
+            description: "The Flask service metrics target is down or missing for 2 minutes."
+```
+
+---
+
+## 7. Grafana Dashboards Codified in JSON
+
+Rather than configuring dashboards manually via point-and-click UI, all Grafana visual panels are versioned in Git as reusable JSON models:
+
+- **Application Performance & KPI Dashboard**: [`monitoring/grafana-application-dashboard.json`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/monitoring/grafana-application-dashboard.json)
+  - Visualizes HTTP throughput (RPS), P95 response latency, status code distributions (2xx vs 5xx), and revenue analytics.
+- **Cluster & Node Infrastructure Dashboard**: [`monitoring/grafana-infrastructure-dashboard.json`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/monitoring/grafana-infrastructure-dashboard.json)
+  - Tracks EKS worker node CPU/RAM saturation, pod memory limits, EBS disk I/O on `mongodb-0`, and active HPA pod scaling curves.

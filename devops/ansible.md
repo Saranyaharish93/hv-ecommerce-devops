@@ -113,10 +113,7 @@ The master playbook [setup_jenkins.yml](file:///d:/HeroVired/Capstone/Saro/hv-ec
 - Uses `jenkins-cli.jar` to bootstrap required plugins: `git`, `workflow-aggregator`, `docker-workflow`, `kubernetes-cli`, `github`, `credentials-binding`.
 - Renders [job.xml.j2](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/roles/jenkins/templates/job.xml.j2) and registers the declarative pipeline job `hv-ecommerce-devops-pipeline` with push webhook triggers pre-configured.
 
-> **Screenshot Placement: Installed Tool Versions on Controller Host**  
-> *Insert Here*: Terminal session output from the EC2 controller executing `java --version`, `docker --version`, `kubectl version`, `terraform version`, and `infracost --version`.  
-> *Target Image File*: `project_artifacts/screenshots/ansible/03_tool_versions_verification.png`  
-> *Markdown Embed Syntax*: `![Installed Tool Versions Verification](../project_artifacts/screenshots/ansible/03_tool_versions_verification.png)`
+
 
 ---
 
@@ -154,21 +151,83 @@ ansible-playbook -i inventory/hosts.ini playbooks/setup_jenkins.yml
 ansible-playbook -i inventory/hosts.ini playbooks/setup_jenkins.yml
 ```
 
-> **Screenshot Placement: Ansible First Pass Execution (Configuration Applied)**  
-> *Insert Here*: Terminal output of the first `ansible-playbook` execution showing tasks applied across common, docker, kubectl, and jenkins roles with `changed>0`.  
-> *Target Image File*: `project_artifacts/screenshots/ansible/01_ansible_first_run.png`  
-> *Markdown Embed Syntax*: `![Ansible First Pass Execution](../project_artifacts/screenshots/ansible/01_ansible_first_run.png)`
+![Ansible Jenkins Controller Installation](../project_artifacts/screenshots/ansible/01_jenkins_install_success.png)
 
 ### Expected Output on Second Run:
-```
+```text
 PLAY RECAP *********************************************************************
 jenkins-server             : ok=24   changed=0    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
 ```
-A return value of `changed=0` guarantees that the system is fully converged and free of drift.
+A return value of `changed=0` guarantees that the system is fully converged and free of configuration drift.
 
-> **Screenshot Placement: Ansible Second Pass Verification (changed=0 Proof)**  
-> *Insert Here*: Terminal output of the second consecutive run displaying the PLAY RECAP with `changed=0` and `failed=0`.  
-> *Target Image File*: `project_artifacts/screenshots/ansible/02_ansible_idempotency_proof.png`  
-> *Markdown Embed Syntax*: `![Ansible Idempotency Verification](../project_artifacts/screenshots/ansible/02_ansible_idempotency_proof.png)`
+---
 
+## 6. How Idempotency is Codified in Our Playbooks & Roles
 
+In Ansible, idempotency is not achieved by chance—it is strictly codified into each task using declarative modules, pre-flight checks, and conditional guards:
+
+### 6.1. Pre-Flight Checks & Conditional Execution (`changed_when: false`)
+When downloading external binary utilities (such as `kubectl` or `docker`), executing a shell command on every run would always trigger `changed=1`. To maintain true idempotency, we inspect the existing binary first and mark the check task with `changed_when: false`:
+
+From [`ansible/roles/kubectl/tasks/main.yml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/roles/kubectl/tasks/main.yml):
+```yaml
+- name: Check if kubectl is installed
+  command: kubectl version --client
+  register: kubectl_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Install kubectl CLI binary
+  when: kubectl_check.rc != 0
+  block:
+    - name: Download official kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        owner: root
+        group: root
+```
+> **Idempotency Mechanism**: On the second pass, `kubectl_check.rc == 0`, causing Ansible to skip the download block entirely. The pre-flight check returns `ok` and `changed=0`.
+
+---
+
+### 6.2. Declarative Desired State (`state: present` & `state: started`)
+Instead of running imperative commands like `systemctl start docker` or `apt-get install`, tasks declare the **desired end state**. Ansible verifies whether the current state already matches before taking action:
+
+From [`ansible/roles/docker/tasks/main.yml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/roles/docker/tasks/main.yml):
+```yaml
+# Ensure service is running without issuing restart commands on every pass
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+# Ensure group exists and append users idempotently
+- name: Add ubuntu and jenkins users to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  loop:
+    - ubuntu
+    - jenkins
+```
+> **Idempotency Mechanism**: `systemd` inspects the active unit; if Docker is already running and enabled, no signal is sent and `changed` remains `0`. Similarly, `append: yes` ensures user group memberships are validated without resetting other secondary groups or passwords.
+
+---
+
+### 6.3. Repository Keyrings & Clean Sources
+In Ubuntu 24.04+, legacy `apt-key add` commands are deprecated. We use modern, idempotent GPG de-armoring and targeted `.sources` lists:
+
+From [`ansible/roles/jenkins/tasks/main.yml`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/roles/jenkins/tasks/main.yml):
+```yaml
+- name: Add Jenkins official APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+    state: present
+    filename: jenkins
+    update_cache: yes
+```
+> **Idempotency Mechanism**: The `apt_repository` module checks `/etc/apt/sources.list.d/jenkins.list`. If the repository entry already matches the target definition, it leaves the file untouched and skips cache updating on subsequent runs.
