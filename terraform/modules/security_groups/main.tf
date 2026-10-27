@@ -39,21 +39,24 @@ resource "aws_security_group" "jenkins" {
   description = "Security Group for Jenkins Controller"
   vpc_id      = var.vpc_id
 
-  ingress {
-    description = "SSH Admin Access"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Note: Inbound rules for ports 22 (SSH) and 8080 (Web UI) are intentionally removed.
+  # Administration is managed securely via AWS Systems Manager (SSM) Session Manager.
 
-  ingress {
-    description = "Jenkins Web UI"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  #  ingress {
+  #    description = "SSH Admin Access"
+  #    from_port   = 22
+  #    to_port     = 22
+  #    protocol    = "tcp"
+  #    cidr_blocks = ["0.0.0.0/0"]
+  #  }
+
+  #  ingress {
+  #    description = "Jenkins Web UI"
+  #    from_port   = 8080
+  #    to_port     = 8080
+  #    protocol    = "tcp"
+  #    cidr_blocks = ["0.0.0.0/0"]
+  #  }
 
   egress {
     description = "Allow all outbound"

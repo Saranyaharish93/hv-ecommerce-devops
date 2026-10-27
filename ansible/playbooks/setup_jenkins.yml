@@ -9,4 +9,5 @@
     - kubectl
     - terraform
     - infracost
+    - trivy
     - jenkins

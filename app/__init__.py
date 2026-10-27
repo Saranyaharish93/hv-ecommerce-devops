@@ -6,8 +6,26 @@ from werkzeug.security import generate_password_hash
 
 def create_app(test_config=None):
     app = Flask(__name__)
+
+    # 1. Environment & Secret Resolution
+    flask_env = os.getenv("FLASK_ENV", "development").lower()
+    is_production = flask_env in ("production", "prod")
+    secret_key = os.getenv("SECRET_KEY")
+
+    # 2. Strict Production Guard: Fail fast if SECRET_KEY is absent or default
+    if is_production and not test_config:
+        if not secret_key or secret_key.strip() in ("", "dev-secret-change-me"):
+            raise RuntimeError(
+                "FATAL: Production startup aborted! SECRET_KEY is missing or set to the insecure "
+                "default 'dev-secret-change-me'. A secure key must be injected via AWS Secrets Manager."
+            )
+
+    # 3. Development Fallback (local workstation convenience)
+    if not secret_key:
+        secret_key = "dev-secret-change-me"
+
     app.config.update(
-        SECRET_KEY=os.getenv("SECRET_KEY", "dev-secret-change-me"),
+        SECRET_KEY=secret_key,
         MONGO_URI=os.getenv("MONGO_URI", "mongodb://mongo:27017/ecommerce"),
         TESTING=False,
         LOW_STOCK_THRESHOLD=int(os.getenv("LOW_STOCK_THRESHOLD", "10")),

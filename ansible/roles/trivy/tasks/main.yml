@@ -1,0 +1,38 @@
+---
+- name: Set Trivy version
+  set_fact:
+    trivy_version: "0.76.1"
+
+- name: Check if Trivy is already installed
+  command: trivy --version
+  register: trivy_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Install Trivy Container Scanner
+  when: trivy_check.rc != 0
+  block:
+    - name: Download Trivy Debian package
+      get_url:
+        url: "https://github.com/aquasecurity/trivy/releases/download/v{{ trivy_version }}/trivy_{{ trivy_version }}_Linux-64bit.deb"
+        dest: "/tmp/trivy.deb"
+        mode: '0644'
+
+    - name: Install Trivy from deb package
+      apt:
+        deb: "/tmp/trivy.deb"
+        state: present
+
+    - name: Remove temporary deb package
+      file:
+        path: "/tmp/trivy.deb"
+        state: absent
+
+- name: Verify Trivy installation
+  command: trivy --version
+  register: trivy_version_output
+  changed_when: false
+
+- name: Display installed Trivy version
+  debug:
+    msg: "Trivy installed successfully: {{ trivy_version_output.stdout_lines[0] }}"

@@ -7,8 +7,9 @@ pipeline {
         TF_DIR             = 'terraform'
         ECR_REGISTRY       = '759530261212.dkr.ecr.us-east-1.amazonaws.com'
         ECR_REPOSITORY     = 'lumora-ecommerce-flask'
-        IMAGE_TAG          = "${env.BUILD_NUMBER ?: 'latest'}"
+        IMAGE_TAG          = "build-${env.BUILD_NUMBER}-${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'manual'}"
         INFRACOST_CLI_ORG  = 'thiagarajan-b'
+        DEPLOYMENT_STATUS  = 'SKIPPED'
     }
 
     options {
@@ -170,12 +171,12 @@ pipeline {
                 echo 'Running Ansible syntax verification...'
                 dir('ansible') {
                     sh '''
-                        if command -v ansible-playbook >/dev/null 2>&1; then
-                            echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
-                            ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
-                        else
-                            echo "Ansible not present on this runner, skipping syntax check."
+                        if ! command -v ansible-playbook >/dev/null 2>&1; then
+                            echo "FATAL: ansible-playbook is required but not installed on this runner."
+                            exit 1
                         fi
+                        echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
+                        ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
                     '''
                 }
             }
@@ -183,24 +184,32 @@ pipeline {
 
         stage('Application Test (Pytest)') {
             steps {
-                echo 'Executing automated unit tests...'
+                echo 'Executing automated unit tests with pytest...'
                 sh '''
-                    # Create and activate an isolated virtual environment
-                    if [ ! -d ".venv" ]; then
-                        python3 -m venv .venv || virtualenv .venv || true
+                    # 1. Preflight check: Ensure python3 is available
+                    if ! command -v python3 >/dev/null 2>&1; then
+                        echo "FATAL: python3 is not installed on this runner."
+                        exit 1
                     fi
 
-                    if [ -f .venv/bin/activate ]; then
-                        . .venv/bin/activate
-                        pip install --no-cache-dir -r requirements.txt
-                        pytest tests/ -v
-                    else
-                        # Fallback if venv is unavailable
-                        pip3 install --user --break-system-packages -r requirements.txt || true
-                        export PATH="$HOME/.local/bin:$PATH"
-                        pytest tests/ -v || python3 -m unittest discover -s tests -p "test_*.py" -v
+                    # 2. Setup isolated virtual environment
+                    if [ ! -d ".venv" ]; then
+                        python3 -m venv .venv
                     fi
+                    . .venv/bin/activate
+
+                    # 3. Deterministic dependency install
+                    pip install --no-cache-dir -r requirements.txt
+
+                    # 4. Run tests and generate machine-readable JUnit XML report
+                    pytest tests/ -v --junitxml=test-results.xml
                 '''
+            }
+            post {
+                always {
+                    // Record test results in Jenkins UI (passes/failures/graphs)
+                    junit testResults: 'test-results.xml', allowEmptyResults: true
+                }
             }
         }
 
@@ -210,7 +219,6 @@ pipeline {
                 sh '''
                     docker build \
                         -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
-                        -t ${ECR_REPOSITORY}:latest \
                         .
                     docker images | grep ${ECR_REPOSITORY}
                 '''
@@ -221,18 +229,42 @@ pipeline {
             steps {
                 echo 'Scanning container image for vulnerabilities using Trivy...'
                 sh '''
-                    if command -v trivy >/dev/null 2>&1; then
-                        trivy image \
-                            --severity HIGH,CRITICAL \
-                            --exit-code 0 \
-                            --format table \
-                            ${ECR_REPOSITORY}:${IMAGE_TAG}
-                    else
-                        echo "Notice: Trivy is not installed on this runner. Skipping image vulnerability scan."
+                    # 1. Preflight check: Never allow silent bypass
+                    if ! command -v trivy >/dev/null 2>&1; then
+                        echo "FATAL: Trivy is not installed on this runner. Security scan is mandatory."
+                        exit 1
                     fi
+
+                    # 2. Generate full machine-readable JSON report for auditing
+                    trivy image \
+                        --format json \
+                        --output trivy-report.json \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                    # 3. Print human-readable summary table to Jenkins console log
+                    trivy image \
+                        --severity HIGH,CRITICAL \
+                        --format table \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                    # 4. Enforce Quality Gate: Fail build on fixable CRITICAL vulnerabilities
+                    trivy image \
+                        --severity CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
                 '''
             }
+            post {
+                always {
+                    // Retain audit evidence on Jenkins build page even if scan fails
+                    archiveArtifacts artifacts: 'trivy-report.json',
+                                     allowEmptyArchive: true,
+                                     fingerprint: true
+                }
+            }
         }
+
 
         stage('Push Docker Image to AWS ECR') {
             steps {
@@ -242,10 +274,8 @@ pipeline {
                         docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
                     docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-                    docker tag ${ECR_REPOSITORY}:latest ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
 
                     docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-                    docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
                 '''
             }
         }
@@ -267,15 +297,29 @@ pipeline {
                     chmod +x scripts/setup_metrics_server.sh
                     ./scripts/setup_metrics_server.sh
 
-                    # 2. Deploy application manifests and HPA via Kustomize
+                    # 2. Deploy application manifests, configmaps, and HPA via Kustomize
                     kubectl apply -k k8s/
 
-                    # 3. Wait for Flask app rollout
+                    # 3. Trigger rolling update to the verified immutable build tag
+                    kubectl set image deployment/flask-app flask-app=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} -n lumora-prod
+
+                    # 4. Wait for Flask app rollout to complete
                     kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
 
-                    # 4. Display live HPA status
+                    # 5. Audit live deployed image identity
+                    DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
+                    echo "Verified running container image: ${DEPLOYED_IMAGE}"
+
+                    # 6. HTTP Health Smoke Test: Confirm application is responding on /health
+                    echo "Executing live HTTP health smoke test..."
+                    kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "import urllib.request; res = urllib.request.urlopen('http://localhost:5000/health'); assert res.getcode() == 200; print('Live Health Check: OK (HTTP 200)')"
+
+                    # 7. Display live HPA status
                     kubectl get hpa -n lumora-prod
                 '''
+                script {
+                    env.DEPLOYMENT_STATUS = 'DEPLOYED'
+                }
             }
         }
     }
@@ -283,23 +327,24 @@ pipeline {
    
 post {
     always {
-        echo 'Pipeline execution completed.'
+        echo "Pipeline execution completed with status: ${currentBuild.currentResult}. Deployment: ${env.DEPLOYMENT_STATUS ?: 'SKIPPED'}"
     }
 
     success {
-        echo 'Jenkins pipeline completed successfully!'
+        echo "Jenkins pipeline completed successfully! Deployment: ${env.DEPLOYMENT_STATUS ?: 'SKIPPED'}"
 
         script {
             try {
+                def statusTitle = (env.DEPLOYMENT_STATUS == 'DEPLOYED') ? 'Deployment Successful' : 'Build Successful (Deployment Skipped)'
                 emailext(
                     to: '${DEFAULT_RECIPIENTS}',
-                    subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    subject: "${env.DEPLOYMENT_STATUS == 'DEPLOYED' ? 'DEPLOYED' : 'SUCCESS'}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                     mimeType: 'text/html',
                     body: """
-                        <h2>Deployment Successful</h2>
+                        <h2>${statusTitle}</h2>
                         <p><b>Job Name:</b> ${env.JOB_NAME}</p>
                         <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-                        <p><b>Status:</b> SUCCESS</p>
+                        <p><b>Deployment Status:</b> ${env.DEPLOYMENT_STATUS ?: 'SKIPPED'}</p>
                         <p><b>Pipeline URL:</b>
                             <a href="${env.BUILD_URL}">${env.BUILD_URL}</a>
                         </p>
