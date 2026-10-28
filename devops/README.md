@@ -38,6 +38,7 @@ The platform integrates industry-standard tools across every phase of the softwa
 | **Auto-scaling** | Kubernetes HPA | HorizontalPodAutoscaler v2 | Dynamic pod scaling (2 to 5 replicas) based on CPU (70%) and Memory (80%) |
 | **Secrets Management** | AWS Secrets Manager + CSI | Secrets Store CSI Driver | Out-of-band secret retrieval; zero credentials committed to source control |
 | **Security Scanning** | Trivy | High/Critical Severity | Automated static analysis and image vulnerability scanning in CI pipeline |
+| **Secret Leak Detection**| Gitleaks | v8.30.1 | Git history static credential audit guaranteeing zero leaked secrets |
 | **Shift-Left FinOps** | Infracost CLI | Non-blocking Breakdown | Automated infrastructure monthly cost estimation during `terraform plan` |
 | **Cost Governance** | AWS Budgets | $25/month threshold alarms| Real-time spend tracking with multi-tier email alerts at 80% and 100% |
 | **Observability & Monitoring**| Prometheus & Grafana | kube-prometheus-stack | Cluster metrics scraping, resource saturation monitoring, and KPI dashboards |
@@ -59,6 +60,7 @@ Ansible playbooks are designed so that running them once or one hundred times yi
 
 ### 2.4. Shift-Left Security (DevSecOps)
 Security is integrated at the earliest stages of the commit lifecycle:
+- Gitleaks audits the entire Git commit history to guarantee zero leaked secrets, API keys, or private keys.
 - Docker builds enforce non-root privilege execution.
 - `.dockerignore` strictly isolates infrastructure code, SSH keys, logs, and artifacts from entering container images.
 - Trivy performs static vulnerability scans on built images before they can be pushed to Amazon ECR.
@@ -104,7 +106,7 @@ The complete production cloud architecture, multi-AZ network layout, container w
 
 ## 4. CI/CD Workflow and Pipeline Stages with In-Context Proofs
 
-The Jenkins Declarative Pipeline ([Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile)) executes 16 structured stages upon every code push:
+The Jenkins Declarative Pipeline ([Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile)) executes structured Shift-Left stages upon every code push:
 
 ```
 Stage 1: Checkout SCM
@@ -113,47 +115,50 @@ Stage 1: Checkout SCM
 Stage 2: Validate Prerequisites
   └── Verifies presence of Terraform, AWS CLI, and active AWS IAM session identity.
 
-Stage 3: Terraform Init
+Stage 3: Application Test (Pytest)
+  └── Fail-fast gate: Runs unit tests, endpoint validation, and mock MongoDB database tests with JUnit XML reporting.
+
+Stage 4: Ansible Configuration Check
+  └── Fail-fast gate: Validates syntax of Ansible playbooks against local inventories.
+
+Stage 5: Docker Build
+  └── Packages container image using BuildKit with non-root security standards (`appuser`).
+
+Stage 6: Trivy Container Security Scan
+  └── Quality Gate: Scans container image for vulnerabilities, archives JSON report, and blocks fixable CRITICAL CVEs.
+
+Stage 7: Terraform Init
   └── Initializes remote S3 state backend with native concurrency locking.
 
-Stage 4: Terraform Format Check
+Stage 8: Terraform Format Check
   └── Validates canonical HCL syntax using `terraform fmt -check -recursive`.
 
-Stage 5: Terraform Validate
+Stage 9: Terraform Validate
   └── Verifies semantic validity of modules, variables, and resource schemas.
 
-Stage 6: Terraform Plan
+Stage 10: Terraform Plan
   └── Synthesizes execution graph and writes binary plan file `tfplan`.
 
-Stage 7: Archive Terraform Plan
+Stage 11: Archive Terraform Plan
   └── Persists `tfplan.txt` as a Jenkins fingerprint artifact for governance review.
 
-Stage 8: FinOps Cost Estimation (Infracost)
+Stage 12: FinOps Cost Estimation (Infracost)
   └── Evaluates infrastructure cost impact and archives breakdown table.
 
-Stage 9: Terraform Apply Approval Gate
+Stage 13: Terraform Apply Approval Gate
   └── Halts pipeline on `main` branch awaiting authorized engineering review.
 
-Stage 10: Terraform Apply
+Stage 14: Terraform Apply
   └── Applies approved infrastructure modifications idempotently to AWS.
 
-Stage 11: Ansible Configuration Check
-  └── Validates syntax of Ansible playbooks against local inventories.
-
-Stage 12: Application Test (Pytest)
-  └── Runs unit tests, endpoint validation, and mock MongoDB database tests.
-
-Stage 13: Docker Build
-  └── Packages container image using BuildKit with non-root security standards.
-
-Stage 14: Trivy Container Security Scan
-  └── Inspects image layers for CVE vulnerabilities across operating system and libraries.
-
 Stage 15: Push Docker Image to AWS ECR
-  └── Authenticates Docker to AWS ECR registry and pushes unique build and latest tags.
+  └── Authenticates Docker to AWS ECR and pushes immutable tag (`build-${BUILD_NUMBER}-${GIT_COMMIT}`).
 
 Stage 16: Deploy to EKS & Setup Metrics Server (Conditional Guard)
-  └── If EKS is ACTIVE: boots Metrics Server, Secrets CSI, and applies manifests via Kustomize.
+  └── If EKS is ACTIVE: boots Metrics Server, applies manifests via Kustomize, updates container image, and verifies rollout.
+
+Stage 17: Post-Deployment Health Check
+  └── Executes live HTTP `/health` smoke test inside running container in EKS.
 ```
 
 ### Visual CI/CD & Security Evidence

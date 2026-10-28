@@ -35,6 +35,105 @@ pipeline {
             }
         }
 
+        stage('Application Test (Pytest)') {
+            steps {
+                echo 'Executing automated unit tests with pytest...'
+                sh '''
+                    # 1. Preflight check: Ensure python3 is available
+                    if ! command -v python3 >/dev/null 2>&1; then
+                        echo "FATAL: python3 is not installed on this runner."
+                        exit 1
+                    fi
+
+                    # 2. Setup isolated virtual environment
+                    if [ ! -d ".venv" ]; then
+                        python3 -m venv .venv
+                    fi
+                    . .venv/bin/activate
+
+                    # 3. Deterministic dependency install
+                    pip install --no-cache-dir -r requirements.txt
+
+                    # 4. Run tests and generate machine-readable JUnit XML report
+                    pytest tests/ -v --junitxml=test-results.xml
+                '''
+            }
+            post {
+                always {
+                    // Record test results in Jenkins UI (passes/failures/graphs)
+                    junit testResults: 'test-results.xml', allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('Ansible Configuration Check') {
+            steps {
+                echo 'Running Ansible syntax verification...'
+                dir('ansible') {
+                    sh '''
+                        if ! command -v ansible-playbook >/dev/null 2>&1; then
+                            echo "FATAL: ansible-playbook is required but not installed on this runner."
+                            exit 1
+                        fi
+                        echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
+                        ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "Building Docker image: ${env.ECR_REPOSITORY}:${env.IMAGE_TAG}..."
+                sh '''
+                    docker build \
+                        -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
+                        .
+                    docker images | grep ${ECR_REPOSITORY}
+                '''
+            }
+        }
+
+        stage('Trivy Container Security Scan') {
+            steps {
+                echo 'Scanning container image for vulnerabilities using Trivy...'
+                sh '''
+                    # 1. Preflight check: Never allow silent bypass
+                    if ! command -v trivy >/dev/null 2>&1; then
+                        echo "FATAL: Trivy is not installed on this runner. Security scan is mandatory."
+                        exit 1
+                    fi
+
+                    # 2. Generate full machine-readable JSON report for auditing
+                    trivy image \
+                        --format json \
+                        --output trivy-report.json \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                    # 3. Print human-readable summary table to Jenkins console log
+                    trivy image \
+                        --severity HIGH,CRITICAL \
+                        --format table \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+                    # 4. Enforce Quality Gate: Fail build on fixable CRITICAL vulnerabilities
+                    trivy image \
+                        --severity CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        ${ECR_REPOSITORY}:${IMAGE_TAG}
+                '''
+            }
+            post {
+                always {
+                    // Retain audit evidence on Jenkins build page even if scan fails
+                    archiveArtifacts artifacts: 'trivy-report.json',
+                                     allowEmptyArchive: true,
+                                     fingerprint: true
+                }
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 echo 'Initializing Terraform S3 Remote State Backend...'
@@ -165,106 +264,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Ansible Configuration Check') {
-            steps {
-                echo 'Running Ansible syntax verification...'
-                dir('ansible') {
-                    sh '''
-                        if ! command -v ansible-playbook >/dev/null 2>&1; then
-                            echo "FATAL: ansible-playbook is required but not installed on this runner."
-                            exit 1
-                        fi
-                        echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
-                        ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
-                    '''
-                }
-            }
-        }
-
-        stage('Application Test (Pytest)') {
-            steps {
-                echo 'Executing automated unit tests with pytest...'
-                sh '''
-                    # 1. Preflight check: Ensure python3 is available
-                    if ! command -v python3 >/dev/null 2>&1; then
-                        echo "FATAL: python3 is not installed on this runner."
-                        exit 1
-                    fi
-
-                    # 2. Setup isolated virtual environment
-                    if [ ! -d ".venv" ]; then
-                        python3 -m venv .venv
-                    fi
-                    . .venv/bin/activate
-
-                    # 3. Deterministic dependency install
-                    pip install --no-cache-dir -r requirements.txt
-
-                    # 4. Run tests and generate machine-readable JUnit XML report
-                    pytest tests/ -v --junitxml=test-results.xml
-                '''
-            }
-            post {
-                always {
-                    // Record test results in Jenkins UI (passes/failures/graphs)
-                    junit testResults: 'test-results.xml', allowEmptyResults: true
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                echo "Building Docker image: ${env.ECR_REPOSITORY}:${env.IMAGE_TAG}..."
-                sh '''
-                    docker build \
-                        -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
-                        .
-                    docker images | grep ${ECR_REPOSITORY}
-                '''
-            }
-        }
-
-        stage('Trivy Container Security Scan') {
-            steps {
-                echo 'Scanning container image for vulnerabilities using Trivy...'
-                sh '''
-                    # 1. Preflight check: Never allow silent bypass
-                    if ! command -v trivy >/dev/null 2>&1; then
-                        echo "FATAL: Trivy is not installed on this runner. Security scan is mandatory."
-                        exit 1
-                    fi
-
-                    # 2. Generate full machine-readable JSON report for auditing
-                    trivy image \
-                        --format json \
-                        --output trivy-report.json \
-                        ${ECR_REPOSITORY}:${IMAGE_TAG}
-
-                    # 3. Print human-readable summary table to Jenkins console log
-                    trivy image \
-                        --severity HIGH,CRITICAL \
-                        --format table \
-                        ${ECR_REPOSITORY}:${IMAGE_TAG}
-
-                    # 4. Enforce Quality Gate: Fail build on fixable CRITICAL vulnerabilities
-                    trivy image \
-                        --severity CRITICAL \
-                        --ignore-unfixed \
-                        --exit-code 1 \
-                        ${ECR_REPOSITORY}:${IMAGE_TAG}
-                '''
-            }
-            post {
-                always {
-                    // Retain audit evidence on Jenkins build page even if scan fails
-                    archiveArtifacts artifacts: 'trivy-report.json',
-                                     allowEmptyArchive: true,
-                                     fingerprint: true
-                }
-            }
-        }
-
 
         stage('Push Docker Image to AWS ECR') {
             steps {

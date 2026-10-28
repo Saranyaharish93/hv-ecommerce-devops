@@ -59,6 +59,12 @@ resource "aws_iam_role_policy_attachment" "jenkins_admin" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
+# Attach AWS Systems Manager (SSM) Session Manager policy for zero-ingress administrative access
+resource "aws_iam_role_policy_attachment" "jenkins_ssm" {
+  role       = aws_iam_role.jenkins.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "jenkins" {
   name = "${var.project_name}-${var.environment}-jenkins-profile"
   role = aws_iam_role.jenkins.name
@@ -111,7 +117,7 @@ resource "local_file" "ansible_inventory" {
   [all:vars]
   ansible_user=ubuntu
   ansible_ssh_private_key_file={{ inventory_dir }}/../jenkins_key.pem
-  ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+  ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
   EOT
   filename = "${path.root}/../ansible/inventory/hosts.ini"
 }

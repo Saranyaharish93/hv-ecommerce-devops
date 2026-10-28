@@ -66,9 +66,10 @@ k8s/
 - **Cost Center Tagging**: Labeled with `cost-center: Multicloud-Mavericks`.
 
 ### 3.2. Stateful Database Tier: `02-mongodb.yml`
-- **Workload Type**: `StatefulSet` with stable network identity `mongodb-0`.
+- **Workload Type**: Single-instance `StatefulSet` (`replicas: 1`) with stable network identity `mongodb-0`.
+- **Durability & Persistence**: Backed by a dedicated 10 GiB Amazon EBS `gp3` PersistentVolumeClaim (`accessModes: ["ReadWriteOnce"]`) managed via the AWS EBS CSI driver. When a pod restarts or moves across worker nodes, EBS automatically re-attaches `/data/db` to guarantee zero data loss.
+- **Scope & High-Availability Boundary**: Designed as single-node persistent storage for capstone resource efficiency. It provides storage durability across node lifecycle events, rather than a multi-node distributed replica set cluster.
 - **Headless Service**: `clusterIP: None` enabling direct DNS resolution to the database pod (`mongodb-service.lumora-prod.svc.cluster.local:27017`).
-- **Volume Claim Template**: Allocates 10 GiB Amazon EBS `gp3` storage with `accessModes: ["ReadWriteOnce"]` mounted to `/data/db`.
 
 | EKS Workload Health Status | Kubernetes Workloads in `lumora-prod` |
 | :---: | :---: |

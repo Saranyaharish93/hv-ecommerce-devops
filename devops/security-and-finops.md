@@ -9,9 +9,13 @@ This document details the security hardening and cost governance frameworks embe
 1. [DevSecOps Philosophy and Threat Mitigation](#1-devsecops-philosophy-and-threat-mitigation)
    - [1.1. Zero-Trust Network Segmentation in Security Groups](#11-zero-trust-network-segmentation-in-security-groups)
    - [1.2. Least-Privilege IAM Roles & Access Policies](#12-least-privilege-iam-roles--access-policies)
+   - [1.3. Jenkins Administrative Access via AWS Systems Manager (SSM)](#13-jenkins-administrative-access-via-aws-systems-manager-ssm)
 2. [Shift-Left Container Security and Trivy Scanning](#2-shift-left-container-security-and-trivy-scanning)
 3. [Container Runtime Hardening and Non-Root User Verification](#3-container-runtime-hardening-and-non-root-user-verification)
 4. [Out-of-Band Secrets Governance via AWS Secrets Store CSI](#4-out-of-band-secrets-governance-via-aws-secrets-store-csi)
+   - [4.1. Production Startup Secret Guard (Flask Fail-Fast)](#41-production-startup-secret-guard-flask-fail-fast)
+   - [4.2. Static Secret Detection and Gitleaks Audit](#42-static-secret-detection-and-gitleaks-audit)
+   - [4.3. Ansible SSH Host-Key Verification](#43-ansible-ssh-host-key-verification)
 5. [FinOps Philosophy and Cost Optimization](#5-finops-philosophy-and-cost-optimization)
 6. [Infracost Shift-Left Pipeline Analysis with Credential Injection](#6-infracost-shift-left-pipeline-analysis-with-credential-injection)
 7. [AWS Budgets and Cost Control Toggles Codified in HCL](#7-aws-budgets-and-cost-control-toggles-codified-in-hcl)
@@ -101,23 +105,59 @@ All cloud operations operate under explicit least-privilege IAM roles:
 
 ---
 
+### 1.3. Jenkins Administrative Access via AWS Systems Manager (SSM)
+
+To eliminate brute-force SSH attacks and unauthorized web interface exposure, **public ingress for TCP port 22 (SSH) and TCP port 8080 (Jenkins Web UI) has been permanently removed from the Jenkins Security Group** (`0.0.0.0/0` ingress removed).
+
+Instead, administrative access is conducted exclusively over an encrypted, IAM-authenticated AWS Systems Manager (SSM) tunnel:
+
+```powershell
+# Establish an encrypted port-forwarding tunnel to Jenkins over AWS SSM
+aws ssm start-session `
+  --target i-03e7a9837cadbced6 `
+  --document-name AWS-StartPortForwardingSession `
+  --parameters '{"portNumber":["8080"],"localPortNumber":["18080"]}'
+```
+- **Access URL:** `http://localhost:18080` (tunneled securely via SSM agent outbound port 443; zero open inbound ports required).
+- **Security Benefits:** Zero public internet exposure, full IAM audit logging in AWS CloudTrail, and compliance with CIS AWS Foundations benchmarks.
+
+---
+
 ## 2. Shift-Left Container Security and Trivy Scanning
 
-Container images are scanned for vulnerabilities directly inside the Jenkins pipeline (Stage 14) before pushing to Amazon ECR:
+Container images are scanned for vulnerabilities directly inside the Jenkins declarative pipeline before pushing to Amazon ECR:
 
 ```bash
+# 1. Preflight check: Ensure scanner is installed
+if ! command -v trivy >/dev/null 2>&1; then
+    echo "FATAL: Trivy container scanner is not installed on this runner."
+    exit 1
+fi
+
+# 2. Generate full machine-readable JSON report for auditing
+trivy image \
+    --format json \
+    --output trivy-report.json \
+    ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+# 3. Print human-readable summary table to Jenkins console log
 trivy image \
     --severity HIGH,CRITICAL \
-    --exit-code 0 \
     --format table \
-    lumora-ecommerce-flask:${IMAGE_TAG}
+    ${ECR_REPOSITORY}:${IMAGE_TAG}
+
+# 4. Enforce Quality Gate: Fail build on fixable CRITICAL vulnerabilities
+trivy image \
+    --severity CRITICAL \
+    --ignore-unfixed \
+    --exit-code 1 \
+    ${ECR_REPOSITORY}:${IMAGE_TAG}
 ```
 
-### Security Benefits:
-- **Comprehensive CVE Detection**: Analyzes both operating system package manager libraries (Debian/Ubuntu packages) and application language dependencies (`Flask`, `pymongo`, `gunicorn`, `reportlab`).
-- **Audit Logging**: Vulnerability scan output is captured directly in the Jenkins build log, ensuring complete traceability for compliance and security auditing.
-
-![Trivy Security Scan Console](../project_artifacts/screenshots/jenkins/04_trivy_scan_console.png)
+### Security Benefits & Quality Gate Policy:
+- **Tiered SLA Gating:** Fixable `CRITICAL` vulnerabilities halt the build (`--exit-code 1`), preventing vulnerable container layers from entering Amazon ECR or EKS.
+- **Audit Logging & Artifact Archiving:** Machine-readable `trivy-report.json` is archived under Jenkins build artifacts on every run (even if the build fails), ensuring complete compliance traceability.
+- **Automated Provisioning:** Trivy `v0.76.1` is codified and installed via Ansible (`ansible/roles/trivy/tasks/main.yml`).
 
 ---
 
@@ -217,6 +257,65 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 Setting `recovery_window_in_days = 0` forces immediate destruction upon `terraform destroy`, bypassing the AWS default 30-day retention holding charges.
 
 ![AWS Secrets Manager Console](../project_artifacts/screenshots/aws/secrets.png)
+
+---
+
+### 4.1. Production Startup Secret Guard (Flask Fail-Fast)
+
+To prevent the application from accidentally running with an insecure default development secret in production if secret injection fails, [`app/__init__.py`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/app/__init__.py) enforces a strict **fail-fast startup check**:
+
+```python
+# Strict Production Guard: Fail fast if SECRET_KEY is absent or default
+if is_production and not test_config:
+    if not secret_key or secret_key.strip() in ("", "dev-secret-change-me"):
+        raise RuntimeError(
+            "FATAL: Production startup aborted! SECRET_KEY is missing or set to the insecure "
+            "default 'dev-secret-change-me'. A secure key must be injected via AWS Secrets Manager."
+        )
+```
+- **Local Development:** Allows seamless developer testing with a local fallback string.
+- **Production Environment:** Refuses to boot if the cryptographically generated secret is missing or unchanged, completely mitigating cookie-signing forgery and session hijacking risks.
+
+---
+
+### 4.2. Static Secret Detection and Gitleaks Audit
+
+To guarantee that no developer credentials, AWS Access Keys (`AKIA...`), database connection strings, or private keys were committed into Git history, the entire repository history was audited using **Gitleaks**:
+
+```powershell
+gitleaks detect --verbose --report-path project_artifacts/gitleaks-report.json
+```
+
+**Terminal Execution Log:**
+```text
+(base) PS D:\HeroVired\Capstone\Saro\hv-ecommerce-devops> gitleaks detect --verbose --report-path project_artifacts/gitleaks-report.json
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+8:59PM INF 76 commits scanned.
+8:59PM INF scanned ~740829 bytes (740.83 KB) in 4.89s
+8:59PM INF no leaks found
+```
+
+**Audit Summary:**
+- **Commits Scanned:** 76 commits
+- **Bytes Analyzed:** ~740,829 bytes (~740.83 KB)
+- **Scan Duration:** 4.89 seconds
+- **Leaks Detected:** `0` (Zero leaks found)
+- **Machine-Readable Audit Report:** [`project_artifacts/gitleaks-report.json`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/project_artifacts/gitleaks-report.json) (Validates clean repository baseline with `[]`)
+
+---
+
+### 4.3. Ansible SSH Host-Key Verification
+
+In [`ansible/ansible.cfg`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/ansible.cfg) and [`ansible/inventory/hosts.ini`](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/inventory/hosts.ini), the insecure `StrictHostKeyChecking=no` bypass was eliminated:
+- `host_key_checking = True` is enforced.
+- SSH connections use `-o StrictHostKeyChecking=accept-new`.
+- Automatically accepts trusted host fingerprints on initial provisioning, while strictly rejecting any subsequent connection attempts if the host key changes or is spoofed (preventing Man-in-the-Middle attacks).
 
 ---
 
