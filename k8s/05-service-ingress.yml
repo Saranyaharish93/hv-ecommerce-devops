@@ -7,7 +7,7 @@ metadata:
     app: flask-app
     cost-center: Multicloud-Mavericks
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - port: 80
       targetPort: 5000
