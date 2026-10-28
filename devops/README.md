@@ -121,44 +121,50 @@ Stage 3: Application Test (Pytest)
 Stage 4: Ansible Configuration Check
   └── Fail-fast gate: Validates syntax of Ansible playbooks against local inventories.
 
-Stage 5: Docker Build
+Stage 5: Gitleaks Repository Secret Scan
+  └── Security Quality Gate: Audits repository & Git history for plaintext credentials; generates and archives `gitleaks-report.json`.
+
+Stage 6: Docker Build
   └── Packages container image using BuildKit with non-root security standards (`appuser`).
 
-Stage 6: Trivy Container Security Scan
-  └── Quality Gate: Scans container image for vulnerabilities, archives JSON report, and blocks fixable CRITICAL CVEs.
+Stage 7: Trivy Container Security Scan
+  └── Security Quality Gate: Scans container image for vulnerabilities, archives JSON report, and blocks fixable CRITICAL CVEs.
 
-Stage 7: Terraform Init
+Stage 8: Terraform Init
   └── Initializes remote S3 state backend with native concurrency locking.
 
-Stage 8: Terraform Format Check
+Stage 9: Terraform Format Check
   └── Validates canonical HCL syntax using `terraform fmt -check -recursive`.
 
-Stage 9: Terraform Validate
+Stage 10: Terraform Validate
   └── Verifies semantic validity of modules, variables, and resource schemas.
 
-Stage 10: Terraform Plan
+Stage 11: Terraform Plan
   └── Synthesizes execution graph and writes binary plan file `tfplan`.
 
-Stage 11: Archive Terraform Plan
+Stage 12: Archive Terraform Plan
   └── Persists `tfplan.txt` as a Jenkins fingerprint artifact for governance review.
 
-Stage 12: FinOps Cost Estimation (Infracost)
+Stage 13: FinOps Cost Estimation (Infracost)
   └── Evaluates infrastructure cost impact and archives breakdown table.
 
-Stage 13: Terraform Apply Approval Gate
+Stage 14: Terraform Apply Approval Gate
   └── Halts pipeline on `main` branch awaiting authorized engineering review.
 
-Stage 14: Terraform Apply
+Stage 15: Terraform Apply
   └── Applies approved infrastructure modifications idempotently to AWS.
 
-Stage 15: Push Docker Image to AWS ECR
+Stage 16: Push Docker Image to AWS ECR
   └── Authenticates Docker to AWS ECR and pushes immutable tag (`build-${BUILD_NUMBER}-${GIT_COMMIT}`).
 
-Stage 16: Deploy to EKS & Setup Metrics Server (Conditional Guard)
-  └── If EKS is ACTIVE: boots Metrics Server, applies manifests via Kustomize, updates container image, and verifies rollout.
+Stage 17: Deploy to EKS & Setup Metrics Server (Conditional Guard)
+  └── If EKS is ACTIVE: boots Metrics Server, injects immutable tag, and applies manifests via Kustomize.
 
-Stage 17: Post-Deployment Health Check
+Stage 18: Post-Deployment Health Check
   └── Executes live HTTP `/health` smoke test inside running container in EKS.
+
+Stage 19: Deploy and Verify Monitoring
+  └── Verifies Prometheus Operator CRDs, applies ServiceMonitor & alerts, and confirms `/metrics` scraping target is UP.
 ```
 
 ### Visual CI/CD & Security Evidence

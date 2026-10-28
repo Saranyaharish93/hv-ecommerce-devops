@@ -82,6 +82,36 @@ pipeline {
             }
         }
 
+        stage('Gitleaks Repository Secret Scan') {
+            steps {
+                echo 'Auditing Git repository and commit history for plaintext secrets...'
+                sh '''
+                    # 1. Preflight check: Ensure Gitleaks binary is available
+                    if ! command -v gitleaks >/dev/null 2>&1; then
+                        echo "Gitleaks not found in system PATH. Bootstrapping standalone binary..."
+                        curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.0/gitleaks_8.24.0_linux_x64.tar.gz | tar -xz -C /tmp gitleaks
+                        sudo mv /tmp/gitleaks /usr/local/bin/gitleaks 2>/dev/null || mv /tmp/gitleaks .gitleaks_bin
+                    fi
+
+                    GITLEAKS_CMD=$(command -v gitleaks || echo "./.gitleaks_bin")
+
+                    # 2. Execute secret scan across Git commit history and fail on leaks
+                    $GITLEAKS_CMD detect \
+                        --verbose \
+                        --report-path gitleaks-report.json \
+                        --exit-code 1
+                '''
+            }
+            post {
+                always {
+                    // Retain audit evidence on Jenkins build page
+                    archiveArtifacts artifacts: 'gitleaks-report.json',
+                                     allowEmptyArchive: true,
+                                     fingerprint: true
+                }
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 echo "Building Docker image: ${env.ECR_REPOSITORY}:${env.IMAGE_TAG}..."
@@ -302,29 +332,21 @@ pipeline {
                     # 3. Deploy application manifests, configmaps, and HPA via Kustomize with immutable tag directly
                     kubectl apply -k k8s/
 
-                    # 4. Deploy Prometheus ServiceMonitor & Alert Rules if monitoring CRDs are present
-                    if kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
-                        echo "Prometheus Operator CRD detected. Deploying ServiceMonitor..."
-                        kubectl apply -f k8s/06-flask-servicemonitor.yml
-                    fi
 
-                    if kubectl get crd prometheusrules.monitoring.coreos.com >/dev/null 2>&1; then
-                        echo "PrometheusRule CRD detected. Deploying Prometheus alerting rules..."
-                        kubectl apply -f monitoring/application-alerts.yaml
-                    fi
 
-                    # 5. Wait for Flask app rollout to complete
+
+                    # 4. Wait for Flask app rollout to complete
                     kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
 
-                    # 6. Audit live deployed image identity
+                    # 5. Audit live deployed image identity
                     DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
                     echo "Verified running container image: ${DEPLOYED_IMAGE}"
 
-                    # 7. HTTP Health Smoke Test: Confirm application is responding on /health
+                    # 6. HTTP Health Smoke Test: Confirm application is responding on /health
                     echo "Executing live HTTP health smoke test..."
                     kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "import urllib.request; res = urllib.request.urlopen('http://localhost:5000/health'); assert res.getcode() == 200; print('Live Health Check: OK (HTTP 200)')"
 
-                    # 8. Display live HPA status
+                    # 7. Display live HPA status
                     kubectl get hpa -n lumora-prod
                 '''
                 script {
@@ -363,6 +385,55 @@ with urllib.request.urlopen(url, timeout=15) as response:
 '
 
             echo "Application health verification PASSED."
+                '''
+            }
+        }
+
+        stage('Deploy and Verify Monitoring') {
+            when {
+                expression {
+                    return sh(
+                        script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                        returnStatus: true
+                    ) == 0
+                }
+            }
+            steps {
+                echo 'Deploying and strictly validating Prometheus monitoring resources...'
+                sh '''
+                    set -eu
+
+                    # 1. Enforce Prometheus Operator and CRD prerequisites (fail hard if absent)
+                    echo "Validating Prometheus Operator CRDs..."
+                    if ! kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
+                        echo "FATAL: ServiceMonitor CRD (servicemonitors.monitoring.coreos.com) missing! Monitoring verification failed."
+                        exit 1
+                    fi
+                    if ! kubectl get crd prometheusrules.monitoring.coreos.com >/dev/null 2>&1; then
+                        echo "FATAL: PrometheusRule CRD (prometheusrules.monitoring.coreos.com) missing! Monitoring verification failed."
+                        exit 1
+                    fi
+
+                    # 2. Deploy ServiceMonitor and application alerting rules
+                    echo "Deploying ServiceMonitor and alert rules..."
+                    kubectl apply -f k8s/06-flask-servicemonitor.yml
+                    kubectl apply -f monitoring/application-alerts.yaml
+
+                    # 3. Confirm alert rules and ServiceMonitor custom resources are actively loaded
+                    echo "Verifying loaded Prometheus resources in monitoring namespace..."
+                    kubectl get prometheusrule lumora-application-alerts -n monitoring
+                    kubectl get servicemonitor flask-app-monitor -n monitoring
+
+                    # 4. Confirm Flask metrics target is UP and serving prometheus metrics
+                    echo "Checking live Flask application metrics endpoint (/metrics)..."
+                    kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "
+import urllib.request
+with urllib.request.urlopen('http://localhost:5000/metrics', timeout=10) as res:
+    assert res.getcode() == 200, 'Metrics endpoint returned non-200 status'
+    body = res.read().decode('utf-8')
+    assert 'flask_' in body or 'python_' in body or 'process_' in body or 'http_' in body, 'No prometheus metrics found'
+    print('Flask Metrics Target Verification: PASSED (HTTP 200, metrics exported)')
+"
         '''
     }
 }

@@ -130,11 +130,18 @@ alertmanager:
   enabled: false
 ```
 
+### 5.1. Decoupled Prometheus & Grafana Architecture:
+- **Bundled Grafana Disabled (`grafana.enabled: false`)**: Bundled Grafana inside the `kube-prometheus-stack` chart is disabled in `monitoring/prometheus-values.yaml`.
+- **Standalone Grafana Deployment (`monitoring/grafana-values.yaml`)**: Grafana is deployed as an independent release via `monitoring/grafana-values.yaml` with `grafana.enabled: true`. This separation allows:
+  - Dedicated persistent storage (`5Gi` EBS PVC with `ReadWriteOnce`) for custom dashboards and user settings without redeploying the Prometheus engine.
+  - Independent version lifecycle upgrades and custom resource sizing (`100m - 500m CPU`, `256Mi - 512Mi RAM`).
+  - Automated provisioning of the Lumora KPI and Infrastructure dashboards via GitOps.
+
 - **Scrape Interval (30s)**: Balances real-time metric fidelity with network/CPU overhead on `t3.small` worker nodes.
 - **Resource Limits (1Gi)**: Enforces memory boundaries to prevent the monitoring agent from triggering node OOM conditions.
 - **Retention (2d)**: Right-sized for capstone execution and sprint demonstrations without exhausting EBS disk capacity.
 
-### 5.1. Prometheus Target Scraping Verification
+### 5.2. Prometheus Target Scraping Verification
 
 The screenshot below validates the Prometheus web console (`/targets`) actively scraping the Flask e-commerce application (`flask-app-monitor/0` across healthy endpoints on port 5000) and the Grafana service in the `UP (2/2)` state:
 
@@ -198,7 +205,7 @@ spec:
         # 4. CrashLoopBackOff / Frequent Restarts
         - alert: FlaskFrequentRestarts
           expr: |
-            increase(kube_pod_container_status_restarts_total{namespace="lumora-prod", container="lumora-ecommerce"}[15m]) > 3
+            increase(kube_pod_container_status_restarts_total{namespace="lumora-prod", container="flask-app"}[15m]) > 3
           for: 2m
           labels:
             severity: warning
