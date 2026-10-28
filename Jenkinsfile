@@ -56,7 +56,7 @@ pipeline {
 
                     # 4. Run tests and generate machine-readable JUnit XML report
                     pytest tests/ -v --junitxml=test-results.xml
-                '''
+                        '''
             }
             post {
                 always {
@@ -77,7 +77,7 @@ pipeline {
                         fi
                         echo "Ansible detected. Validating playbook syntax using ansible.cfg..."
                         ansible-playbook -i inventory/hosts.ini --syntax-check playbooks/setup_jenkins.yml
-                    '''
+                            '''
                 }
             }
         }
@@ -95,12 +95,13 @@ pipeline {
 
                     GITLEAKS_CMD=$(command -v gitleaks || echo "./.gitleaks_bin")
 
-                    # 2. Execute secret scan across Git commit history and fail on leaks
+                    # 2. Execute secret scan across Git commit history, redact sensitive values, and fail on leaks
                     $GITLEAKS_CMD detect \
                         --verbose \
+                        --redact \
                         --report-path gitleaks-report.json \
                         --exit-code 1
-                '''
+                        '''
             }
             post {
                 always {
@@ -120,7 +121,7 @@ pipeline {
                         -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
                         .
                     docker images | grep ${ECR_REPOSITORY}
-                '''
+                        '''
             }
         }
 
@@ -152,7 +153,7 @@ pipeline {
                         --ignore-unfixed \
                         --exit-code 1 \
                         ${ECR_REPOSITORY}:${IMAGE_TAG}
-                '''
+                        '''
             }
             post {
                 always {
@@ -204,7 +205,7 @@ pipeline {
                         terraform show \
                             -no-color \
                             tfplan > tfplan.txt
-                    '''
+                            '''
                 }
             }
         }
@@ -253,7 +254,7 @@ pipeline {
                                 else
                                     echo "Notice: Valid INFRACOST_API_KEY not configured. Skipping."
                                 fi
-                            '''
+                                    '''
 
                             if (fileExists('infracost-report.txt')) {
                                 archiveArtifacts artifacts: 'infracost-report.txt',
@@ -290,7 +291,7 @@ pipeline {
                             -no-color \
                             -auto-approve \
                             tfplan
-                    '''
+                            '''
                 }
             }
         }
@@ -305,7 +306,7 @@ pipeline {
                     docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
 
                     docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-                '''
+                        '''
             }
         }
 
@@ -342,13 +343,22 @@ pipeline {
                     DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
                     echo "Verified running container image: ${DEPLOYED_IMAGE}"
 
+                    EXPECTED_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+                    if [ "${DEPLOYED_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+                        echo "FATAL: Deployed image does not match expected build image."
+                        echo "Expected: ${EXPECTED_IMAGE}"
+                        echo "Actual:   ${DEPLOYED_IMAGE}"
+                        exit 1
+                    fi
+                    echo "Image identity verification PASSED."
+
                     # 6. HTTP Health Smoke Test: Confirm application is responding on /health
                     echo "Executing live HTTP health smoke test..."
                     kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "import urllib.request; res = urllib.request.urlopen('http://localhost:5000/health'); assert res.getcode() == 200; print('Live Health Check: OK (HTTP 200)')"
 
                     # 7. Display live HPA status
                     kubectl get hpa -n lumora-prod
-                '''
+                        '''
                 script {
                     env.DEPLOYMENT_STATUS = 'DEPLOYED'
                 }
@@ -385,7 +395,7 @@ with urllib.request.urlopen(url, timeout=15) as response:
 '
 
             echo "Application health verification PASSED."
-                '''
+                        '''
             }
         }
 
@@ -434,7 +444,70 @@ with urllib.request.urlopen('http://localhost:5000/metrics', timeout=10) as res:
     assert 'flask_' in body or 'python_' in body or 'process_' in body or 'http_' in body, 'No prometheus metrics found'
     print('Flask Metrics Target Verification: PASSED (HTTP 200, metrics exported)')
 "
-        '''
+
+                    # 5. Query live Prometheus API to verify Flask target is UP and alert rules are actively loaded
+                    echo "Querying live Prometheus API for scrape target health and alert rule status..."
+                    kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "
+import urllib.request
+import json
+import sys
+
+prom_candidates = [
+    'http://prometheus-operated.monitoring.svc.cluster.local:9090',
+    'http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090',
+    'http://prometheus.monitoring.svc.cluster.local:9090'
+]
+
+prom_url = None
+for candidate in prom_candidates:
+    try:
+        with urllib.request.urlopen(f'{candidate}/api/v1/status/buildinfo', timeout=4) as res:
+            if res.getcode() == 200:
+                prom_url = candidate
+                break
+    except Exception:
+        continue
+
+if not prom_url:
+    print('FATAL: Prometheus API is unreachable via internal cluster DNS!')
+    sys.exit(1)
+
+print(f'Connected to Prometheus API at: {prom_url}')
+
+# Verify Flask target status is UP in Prometheus
+with urllib.request.urlopen(f'{prom_url}/api/v1/targets', timeout=10) as res:
+    data = json.loads(res.read().decode('utf-8'))
+    active_targets = data.get('data', {}).get('activeTargets', [])
+    flask_targets = [
+        t for t in active_targets 
+        if 'flask' in t.get('discoveredLabels', {}).get('__meta_kubernetes_service_name', '')
+        or 'flask' in t.get('labels', {}).get('job', '')
+        or 'flask' in t.get('scrapePool', '')
+    ]
+    if not flask_targets:
+        print('FATAL: Flask metrics target not discovered by Prometheus!')
+        sys.exit(1)
+    
+    up_targets = [t for t in flask_targets if t.get('health') == 'up']
+    if not up_targets:
+        current_health = [t.get('health') for t in flask_targets]
+        print(f'FATAL: Flask metrics target is not UP! Current health: {current_health}')
+        sys.exit(1)
+    print(f'Prometheus Target Health: UP ({len(up_targets)} target(s) healthy)')
+
+# Verify application alert rules are actively loaded in Prometheus engine
+with urllib.request.urlopen(f'{prom_url}/api/v1/rules', timeout=10) as res:
+    data = json.loads(res.read().decode('utf-8'))
+    groups = data.get('data', {}).get('groups', [])
+    lumora_groups = [g for g in groups if 'lumora' in g.get('name', '')]
+    if not lumora_groups:
+        print('FATAL: Lumora application alert rule group not found in active Prometheus engine!')
+        sys.exit(1)
+    
+    loaded_rules = [r.get('name') for g in lumora_groups for r in g.get('rules', [])]
+    print(f'Prometheus Rules Verification: PASSED (Loaded rules: {loaded_rules})')
+"
+                '''
     }
 }
 
