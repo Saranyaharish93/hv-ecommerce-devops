@@ -63,7 +63,7 @@ spec:
             increase(
               kube_pod_container_status_restarts_total{
                 namespace="lumora-prod",
-                container="lumora-ecommerce"
+                container="flask-app"
               }[15m]
             ) > 3
           for: 2m

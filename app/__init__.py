@@ -45,7 +45,7 @@ def create_app(test_config=None):
 
     with app.app_context():
         seed_products(app.db)
-        seed_admin(app.db)
+        seed_admin(app.db, is_production=is_production, test_config=test_config)
     return app
 
 
@@ -63,9 +63,20 @@ def seed_products(db):
         ])
 
 
-def seed_admin(db):
+def seed_admin(db, is_production=False, test_config=None):
     admin_email = os.getenv("ADMIN_EMAIL", "admin@lumora.local").strip().lower()
-    admin_password = os.getenv("ADMIN_PASSWORD", "Admin@123")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+
+    # Strict Production Guard: Fail fast if ADMIN_PASSWORD is absent or default
+    if is_production and not test_config:
+        if not admin_password or admin_password.strip() in ("", "Admin@123"):
+            raise RuntimeError(
+                "FATAL: Production startup aborted! ADMIN_PASSWORD is missing or set to the insecure "
+                "default 'Admin@123'. A secure password must be injected via AWS Secrets Manager."
+            )
+
+    if not admin_password:
+        admin_password = "Admin@123"
     if not db.users.find_one({"email": admin_email}):
         db.users.insert_one({
             "name": "Lumora Admin",

@@ -296,24 +296,35 @@ pipeline {
                     chmod +x scripts/setup_metrics_server.sh
                     ./scripts/setup_metrics_server.sh
 
-                    # 2. Deploy application manifests, configmaps, and HPA via Kustomize
+                    # 2. Inject verified immutable build tag into deployment manifest prior to applying
+                    sed -i "s|image: .*/lumora-ecommerce-flask:.*|image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}|g" k8s/03-flask-deployment.yml
+
+                    # 3. Deploy application manifests, configmaps, and HPA via Kustomize with immutable tag directly
                     kubectl apply -k k8s/
 
-                    # 3. Trigger rolling update to the verified immutable build tag
-                    kubectl set image deployment/flask-app flask-app=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} -n lumora-prod
+                    # 4. Deploy Prometheus ServiceMonitor & Alert Rules if monitoring CRDs are present
+                    if kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
+                        echo "Prometheus Operator CRD detected. Deploying ServiceMonitor..."
+                        kubectl apply -f k8s/06-flask-servicemonitor.yml
+                    fi
 
-                    # 4. Wait for Flask app rollout to complete
+                    if kubectl get crd prometheusrules.monitoring.coreos.com >/dev/null 2>&1; then
+                        echo "PrometheusRule CRD detected. Deploying Prometheus alerting rules..."
+                        kubectl apply -f monitoring/application-alerts.yaml
+                    fi
+
+                    # 5. Wait for Flask app rollout to complete
                     kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
 
-                    # 5. Audit live deployed image identity
+                    # 6. Audit live deployed image identity
                     DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
                     echo "Verified running container image: ${DEPLOYED_IMAGE}"
 
-                    # 6. HTTP Health Smoke Test: Confirm application is responding on /health
+                    # 7. HTTP Health Smoke Test: Confirm application is responding on /health
                     echo "Executing live HTTP health smoke test..."
                     kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "import urllib.request; res = urllib.request.urlopen('http://localhost:5000/health'); assert res.getcode() == 200; print('Live Health Check: OK (HTTP 200)')"
 
-                    # 7. Display live HPA status
+                    # 8. Display live HPA status
                     kubectl get hpa -n lumora-prod
                 '''
                 script {
