@@ -2,7 +2,7 @@
 
 [![Production Storefront](https://img.shields.io/badge/Live%20Storefront-lumora.thiagarajanb.dpdns.org-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://lumora.thiagarajanb.dpdns.org/)
 [![AWS EKS](https://img.shields.io/badge/Kubernetes-AWS%20EKS%20v1.36-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](devops/kubernetes.md)
-[![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%2016--Stage-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
+[![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%2019--Stage-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform%20v1.8+-7B42BC?style=flat-square&logo=terraform&logoColor=white)](devops/terraform.md)
 [![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)](devops/ansible.md)
 [![Status](https://img.shields.io/badge/Capstone%20Status-100%25%20Completed-brightgreen?style=flat-square)](devops/README.md)
@@ -124,7 +124,7 @@ It demonstrates how the following work together in practice:
 
 ### 2. CI/CD Orchestration & Shift-Left DevSecOps (Jenkins & Ansible)
 
-| Jenkins Web Controller Dashboard | 16-Stage Declarative Pipeline Execution |
+| Jenkins Web Controller Dashboard | 19-Stage Declarative Pipeline Execution |
 | :---: | :---: |
 | ![Jenkins Web Dashboard](project_artifacts/screenshots/jenkins/Jenkins_Homepage.png) | ![Pipeline Stage View](project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png) |
 

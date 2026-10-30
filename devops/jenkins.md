@@ -38,9 +38,9 @@ The Jenkins CI/CD controller is deployed on an Amazon EC2 instance within the Lu
 
 ## 2. Declarative Pipeline Overview
 
-The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile). It executes 16 sequential stages spanning code validation, infrastructure management, containerization, security scanning, artifact promotion, and Kubernetes deployment.
+The pipeline is codified entirely in the root [Jenkinsfile](../Jenkinsfile). It executes sequential stages spanning code validation, infrastructure management, containerization, security scanning, artifact promotion, and Kubernetes deployment.
 
-| 16-Stage Pipeline Stage View | Multi-Branch Pipeline Job Overview |
+| 19-Stage Pipeline Stage View | Multi-Branch Pipeline Job Overview |
 | :---: | :---: |
 | ![Pipeline Stage View](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png) | ![Jenkins Pipeline Job](../project_artifacts/screenshots/jenkins/Jenkins_hv-ecommerce-pipeline_page.png) |
 
@@ -94,7 +94,7 @@ The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired
 - Ensures playbooks are syntactically sound and roles are correctly resolved prior to host configuration.
 
 ### Stage 12: Application Test (Pytest)
-- Installs dependencies from [requirements.txt](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/requirements.txt), including `pytest` and `mongomock`.
+- Installs dependencies from [requirements.txt](../requirements.txt), including `pytest` and `mongomock`.
 - Executes automated test suites in `tests/`:
   - `test_health`: Verifies that the `/health` endpoint returns HTTP 200 and status `UP`.
   - `test_products_api_has_seed_data`: Tests API endpoint payload serialization.
@@ -106,7 +106,7 @@ The pipeline is codified entirely in the root [Jenkinsfile](file:///d:/HeroVired
   ```bash
   docker build -t lumora-ecommerce-flask:${IMAGE_TAG} -t lumora-ecommerce-flask:latest .
   ```
-- Utilizes layer caching and respects [.dockerignore](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/.dockerignore) to prevent leaking keys or infrastructure manifests into image layers.
+- Utilizes layer caching and respects [.dockerignore](../.dockerignore) to prevent leaking keys or infrastructure manifests into image layers.
 
 ### Stage 14: Trivy Container Security Scan
 - Scans the built image for operating system and application dependency vulnerabilities:
@@ -158,7 +158,7 @@ Jenkins Webhook Listener (GitHubPushTrigger)
 hv-ecommerce-devops-pipeline (Automatic Execution)
 ```
 
-The trigger is codified in the Ansible job template ([job.xml.j2](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/roles/jenkins/templates/job.xml.j2)):
+The trigger is codified in the Ansible job template ([job.xml.j2](../ansible/roles/jenkins/templates/job.xml.j2)):
 ```xml
 <triggers>
   <com.cloudbees.jenkins.GitHubPushTrigger plugin="github">

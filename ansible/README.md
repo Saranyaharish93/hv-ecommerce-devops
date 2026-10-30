@@ -1,5 +1,7 @@
 ## 1. Multi-Service Ansible Directory Architecture
 
+> **Deep-Dive Technical Guide**: For complete role specifications, playbook execution flows, and host-key verification details, see the [Ansible Configuration Management Guide](../devops/ansible.md) and [DevOps Platform Master Guide](../devops/README.md).
+
 To ensure Jenkins configuration does not cause confusion with other services (planned in Sprint 3 like Docker, kubectl, and AWS CLI), we adopt the standard **Ansible Role-Based Modular Architecture**.
 
 ```

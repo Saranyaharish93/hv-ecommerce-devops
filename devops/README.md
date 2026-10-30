@@ -106,7 +106,7 @@ The complete production cloud architecture, multi-AZ network layout, container w
 
 ## 4. CI/CD Workflow and Pipeline Stages with In-Context Proofs
 
-The Jenkins Declarative Pipeline ([Jenkinsfile](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/Jenkinsfile)) executes structured Shift-Left stages upon every code push:
+The Jenkins Declarative Pipeline ([Jenkinsfile](../Jenkinsfile)) executes structured Shift-Left stages upon every code push:
 
 ```
 Stage 1: Checkout SCM
@@ -169,8 +169,8 @@ Stage 19: Deploy and Verify Monitoring
 
 ### Visual CI/CD & Security Evidence
 
-#### 4. Jenkins 16-Stage Declarative Pipeline Run
-![Jenkins 16-Stage Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)
+#### 4. Jenkins 19-Stage Declarative Pipeline Run
+![Jenkins 19-Stage Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)
 
 #### 5. Infracost Shift-Left Financial Breakdown Report
 ![Infracost Cost Breakdown Report](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)
@@ -182,11 +182,24 @@ Stage 19: Deploy and Verify Monitoring
 
 ## 5. Component Deep-Dive Documentation Links
 
-For comprehensive technical specifications, implementation details, and role-specific configurations, consult the individual component guides:
+For comprehensive technical specifications, implementation details, and role-specific configurations, consult the individual component guides and directory READMEs:
 
-- [Jenkins CI/CD Pipeline & Controller Architecture](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/jenkins.md)
-- [Terraform Infrastructure as Code & AWS Network Topology](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/terraform.md)
-- [Ansible Configuration Management & Modular Playbooks](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/ansible.md)
-- [Kubernetes Workloads, EKS Orchestration & CSI Secrets](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/kubernetes.md)
-- [Observability, Prometheus, Grafana & Metrics Server](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/monitoring.md)
-- [Shift-Left Security (DevSecOps) & FinOps Cost Governance](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/devops/security-and-finops.md)
+### Component Architecture Guides & Directory READMEs
+
+| Component | Technical Deep-Dive Guide | Component Source & Directory README | Operational Scope & Coverage |
+| :--- | :--- | :--- | :--- |
+| **CI/CD Pipeline** | [Jenkins CI/CD Architecture Guide](./jenkins.md) | [Jenkins Declarative Pipeline](../Jenkinsfile) | 19-stage declarative pipeline, automated testing, container build, Trivy scan, rolling deploy |
+| **Infrastructure as Code** | [Terraform Architecture & Networking Guide](./terraform.md) | [Terraform Module README](../terraform/README.md) | Multi-AZ VPC, subnets, NAT Gateways, ECR repository, EKS cluster, S3 remote state locking |
+| **Configuration Mgmt** | [Ansible Playbooks & Roles Guide](./ansible.md) | [Ansible Directory README](../ansible/README.md) | Idempotent controller setup, role-based architecture, strict host-key verification |
+| **Container Orchestration** | [Kubernetes Workloads & EKS Guide](./kubernetes.md) | [Kubernetes Manifests README](../k8s/README.md) | RollingUpdate deployments, ClusterIP service, ALB Ingress, HPA v2, MongoDB StatefulSet |
+| **Observability & SRE** | [Monitoring, Prometheus & Grafana Guide](./monitoring.md) | [Monitoring Assets README](../monitoring/README.md) | kube-prometheus-stack, standalone Grafana EBS PVC, PrometheusRule alerts, ServiceMonitor |
+| **DevSecOps & FinOps** | [Shift-Left Security & FinOps Governance](./security-and-finops.md) | [Project Security Overview](./security-and-finops.md) | Gitleaks secret detection, non-root containers, Secrets Store CSI, Infracost, AWS Budgets |
+
+### Quick Links to Technical Guides
+- [Jenkins CI/CD Pipeline & Controller Architecture](./jenkins.md)
+- [Terraform Infrastructure as Code & AWS Network Topology](./terraform.md)
+- [Ansible Configuration Management & Modular Playbooks](./ansible.md)
+- [Kubernetes Workloads, EKS Orchestration & CSI Secrets](./kubernetes.md)
+- [Observability, Prometheus, Grafana & Metrics Server](./monitoring.md)
+- [Shift-Left Security (DevSecOps) & FinOps Cost Governance](./security-and-finops.md)
+- [Project Repository Root README](../README.md)

@@ -49,7 +49,7 @@ ansible/
     └── jenkins/                         # Jenkins LTS repository, plugins, CLI, and job creation
 ```
 
-The master playbook [setup_jenkins.yml](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/ansible/playbooks/setup_jenkins.yml) sequentially applies these roles:
+The master playbook [setup_jenkins.yml](../ansible/playbooks/setup_jenkins.yml) sequentially applies these roles:
 
 ```yaml
 ---

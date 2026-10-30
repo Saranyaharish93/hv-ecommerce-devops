@@ -148,7 +148,7 @@ An AWS Budgets resource actively monitors spending against a $25 USD monthly thr
 
 ## 7. FinOps Cost Toggles and Plan Execution Proof
 
-In [terraform.tfvars](file:///d:/HeroVired/Capstone/Saro/hv-ecommerce-devops/terraform/terraform.tfvars), we provide conditional toggles:
+In [terraform.tfvars](../terraform/terraform.tfvars), we provide conditional toggles:
 
 ```hcl
 # Set to true when starting Sprint 4 (Kubernetes deployment)
