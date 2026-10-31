@@ -24,6 +24,7 @@ spec:
         tier: frontend
         cost-center: Multicloud-Mavericks
     spec:
+      serviceAccountName: lumora-app
       containers:
         - name: flask-app
           image: 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest

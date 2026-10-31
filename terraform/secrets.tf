@@ -69,3 +69,7 @@ resource "aws_iam_role_policy_attachment" "eks_secrets_read" {
   role       = module.eks[0].node_iam_role_name
   policy_arn = aws_iam_policy.secrets_read_policy.arn
 }
+
+# Note: IRSA role lumora-ecommerce-prod-secrets-role already exists in AWS and is
+# annotated on ServiceAccount lumora-app (k8s/01-configmap-secrets.yml). Its trust
+# policy must use the current cluster OIDC provider after any EKS recreate.
