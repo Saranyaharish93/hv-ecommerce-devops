@@ -4,6 +4,10 @@ This directory contains modular HashiCorp Terraform configurations used to provi
 
 > **Deep-Dive Technical Guide**: For complete architectural specifications, network diagrams, security groups, and state management details, see the [Terraform Platform Guide](../devops/terraform.md) and [DevOps Platform Master Guide](../devops/README.md).
 
+![AWS 3-Tier VPC + GitOps Platform Architecture](../project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg)
+
+Terraform provisions the VPC, Jenkins EC2, ECR, and EKS control plane / node groups. Day-2 application delivery into `lumora-prod` is handled by **Argo CD** (not Terraform).
+
 ---
 
 ## Directory Structure

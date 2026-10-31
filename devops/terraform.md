@@ -55,7 +55,9 @@ terraform/
 
 The production network implements a 3-tier, multi-AZ layout within the `10.0.0.0/16` CIDR block across availability zones `us-east-1a` and `us-east-1b`:
 
-![AWS VPC Cloud Topology Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
+![AWS VPC / GitOps Platform Architecture](../project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg)
+
+![End-to-End DevOps & GitOps Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
 
 ### Subnet Allocation Table
 

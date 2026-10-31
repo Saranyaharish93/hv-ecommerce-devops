@@ -127,17 +127,14 @@ The pipeline is codified entirely in the root [Jenkinsfile](../Jenkinsfile). It 
 
 ![Amazon ECR Flask Repository](../project_artifacts/screenshots/jenkins/06_ecr_images.png)
 
-### Stage 16: Deploy to EKS & Setup Metrics Server (Conditional Guard)
-- The pipeline checks if the EKS cluster is active before attempting deployment:
-  ```groovy
-  expression {
-      return sh(
-          script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
-          returnStatus: true
-      ) == 0
-  }
-  ```
-- If ACTIVE, it invokes `scripts/setup_metrics_server.sh` (ensuring Metrics Server and Secrets CSI Driver are installed), applies the Kubernetes manifests via Kustomize (`kubectl apply -k k8s/`), and blocks until `kubectl rollout status deployment/flask-app` successfully completes.
+### Stage 16+: GitOps Hand-off (Argo CD) — not `kubectl apply`
+When EKS is `ACTIVE` and the branch is `main`, Jenkins:
+
+1. **Publish Image Tag for Argo CD** — updates `k8s/kustomization.yml` `images.newTag`, commits `deploy: flask image … [skip ci]`, and pushes to `main`.
+2. **Ensure Metrics Server** — still runs `scripts/setup_metrics_server.sh` for cluster add-ons only.
+3. **Verify Argo CD Rollout** — polls the live Deployment until the image matches the published tag, then smoke-tests `/health` (read-only).
+
+Checkout aborts early when the triggering commit message contains `[skip ci]`, so the image-tag commit does not restart a full CI loop. Continuous delivery into `lumora-prod` is owned by Argo CD (`argocd/application.yaml`).
 
 ---
 
@@ -146,16 +143,14 @@ The pipeline is codified entirely in the root [Jenkinsfile](../Jenkinsfile). It 
 Automation between GitHub and Jenkins is configured via webhook triggers:
 
 ```
-[Developer Push / PR Merge] 
+[Developer Push / PR Merge]
        |
        v
 GitHub Repository (Saranyaharish93/hv-ecommerce-devops)
        |
-       v (POST http://32.195.28.191:8080/github-webhook/)
-Jenkins Webhook Listener (GitHubPushTrigger)
+       +---> (webhook) Jenkins CI → ECR push → GitOps tag commit
        |
-       v
-hv-ecommerce-devops-pipeline (Automatic Execution)
+       +---> Argo CD watches main / path k8s → syncs lumora-prod
 ```
 
 The trigger is codified in the Ansible job template ([job.xml.j2](../ansible/roles/jenkins/templates/job.xml.j2)):

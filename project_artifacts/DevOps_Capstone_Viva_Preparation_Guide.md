@@ -32,7 +32,7 @@ This document is the master technical defense and viva preparation guide for the
 6. **Governance Gate**: An interactive manual approval prompt halts the pipeline on `main` before `terraform apply` executes.
 7. **Quality & Security Gates**: Ansible playbook syntax is verified; Pytest runs unit tests and mock MongoDB tests; Docker BuildKit builds the container image as unprivileged `appuser`; Trivy scans the image for `HIGH` and `CRITICAL` CVEs.
 8. **Artifact Promotion**: The verified container image is tagged with `${BUILD_NUMBER}` and `latest`, then pushed to Amazon ECR.
-9. **Zero-Downtime Rollout**: If the EKS cluster is `ACTIVE`, Jenkins executes `scripts/setup_metrics_server.sh` and applies manifests via `kubectl apply -k k8s/`. The AWS Load Balancer Controller routes traffic to pod private IPs (`target-type: ip`) while Kubernetes performs a zero-downtime rolling update.
+9. **Zero-Downtime Rollout (GitOps)**: If the EKS cluster is `ACTIVE`, Jenkins pushes the image to ECR, commits the immutable tag to `k8s/kustomization.yml`, and Argo CD syncs `k8s/` into `lumora-prod` (auto-sync + self-heal). The AWS Load Balancer Controller routes traffic to pod private IPs (`target-type: ip`) while Kubernetes performs a zero-downtime rolling update.
 
 ### Q1.2: Why did you implement both Terraform and Ansible instead of using just one?
 **Answer:**  

@@ -2,7 +2,11 @@
 
 > **Deep-Dive Technical Guide**: For complete role specifications, playbook execution flows, and host-key verification details, see the [Ansible Configuration Management Guide](../devops/ansible.md) and [DevOps Platform Master Guide](../devops/README.md).
 
-To ensure Jenkins configuration does not cause confusion with other services (planned in Sprint 3 like Docker, kubectl, and AWS CLI), we adopt the standard **Ansible Role-Based Modular Architecture**.
+![End-to-End Architecture (Jenkins + Ansible)](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
+
+Ansible provisions the Jenkins controller (Docker, kubectl, AWS CLI, Trivy). Application delivery to EKS is GitOps: Jenkins publishes the image tag; Argo CD syncs `k8s/` into `lumora-prod`.
+
+To ensure Jenkins configuration does not cause confusion with other services (Docker, kubectl, and AWS CLI), we adopt the standard **Ansible Role-Based Modular Architecture**.
 
 ```
 hv-ecommerce-devops/
