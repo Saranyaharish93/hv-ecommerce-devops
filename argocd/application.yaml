@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: lumora
+  namespace: argocd
+spec:
+  description: Lumora e-commerce storefront GitOps project
+  sourceRepos:
+    - https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: lumora-prod
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lumora-prod
+  namespace: argocd
+spec:
+  project: lumora
+  source:
+    repoURL: https://github.com/Saranyaharish93/hv-ecommerce-devops.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lumora-prod
+  # HPA owns live replica count; prevent Argo CD self-heal from resetting it.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: flask-app
+      namespace: lumora-prod
+      jsonPointers:
+        - /spec/replicas
+  syncPolicy:
+    # Manual first sync in the UI. After Healthy/Synced, enable automation below.
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+    # Uncomment after the first successful manual sync:
+    # automated:
+    #   prune: true
+    #   selfHeal: true

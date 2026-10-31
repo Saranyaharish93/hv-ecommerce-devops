@@ -10,3 +10,8 @@ resources:
   - 03-flask-deployment.yml
   - 04-hpa.yml
   - 05-service-ingress.yml
+
+# Argo CD / GitOps: pin the exact ECR tag. Jenkins updates newTag after each push.
+images:
+  - name: 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask
+    newTag: "46"

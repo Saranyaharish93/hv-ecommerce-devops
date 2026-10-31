@@ -52,7 +52,7 @@ module "eks" {
   public_subnet_ids           = module.vpc.public_subnet_ids
   eks_nodes_security_group_id = module.security_groups.eks_nodes_security_group_id
   node_instance_type          = "t3.small"
-  node_desired_size           = 2
+  node_desired_size           = 4
   node_min_size               = 2
   node_max_size               = 4
 }
