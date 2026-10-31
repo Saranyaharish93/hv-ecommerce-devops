@@ -14,3 +14,4 @@ scripts
 *.html
 Jenkinsfile
 azure-pipelines.yml
+.gitleaks*
