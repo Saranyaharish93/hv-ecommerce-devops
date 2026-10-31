@@ -27,7 +27,8 @@ spec:
       containers:
         - name: flask-app
           image: 759530261212.dkr.ecr.us-east-1.amazonaws.com/lumora-ecommerce-flask:latest
-          imagePullPolicy: Always
+          # Tag is overridden by kustomization.yml images.newTag (immutable build tags).
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
               name: http
