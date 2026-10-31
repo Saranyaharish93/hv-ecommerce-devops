@@ -32,7 +32,8 @@ The platform integrates industry-standard tools across every phase of the softwa
 | **Infrastructure as Code** | HashiCorp Terraform | 1.8+ | Declarative multi-module infrastructure provisioning on AWS |
 | **Remote State Backend** | AWS S3 + S3 Lockfile | AES-256 encrypted | Persistent remote state storage with native concurrency lock prevention |
 | **Configuration Mgmt** | Ansible | 2.16+ Core | Idempotent host configuration, dependency installation, and tool bootstrapping |
-| **CI/CD Orchestrator** | Jenkins LTS | 2.452+ (AWS EC2) | Declarative 16-stage pipeline orchestrating test, scan, build, IaC, and deployment |
+| **CI/CD Orchestrator** | Jenkins LTS | 2.452+ (AWS EC2) | Declarative pipeline: test, scan, build, IaC, ECR push, GitOps image-tag commit |
+| **GitOps / CD** | Argo CD | in-cluster (`argocd`) | Auto-sync + self-heal of `k8s/` manifests into `lumora-prod` |
 | **Container Orchestration**| Amazon EKS | Kubernetes v1.36 | Managed Kubernetes control plane and multi-AZ EC2 worker node groups |
 | **Ingress & Networking** | AWS ALB Ingress Controller | AWS Load Balancer Controller | Internet-facing application load balancing, TLS termination, and pod routing |
 | **Auto-scaling** | Kubernetes HPA | HorizontalPodAutoscaler v2 | Dynamic pod scaling (2 to 5 replicas) based on CPU (70%) and Memory (80%) |
@@ -70,9 +71,12 @@ Security is integrated at the earliest stages of the commit lifecycle:
 Cloud cost visibility is integrated into the developer workflow. Infracost evaluates every Terraform plan against AWS pricing APIs to forecast monthly financial deltas. In addition, an AWS Budget alarm enforces a strict $25/month project limit, and modular cost toggles (`enable_eks = false`, `enable_nat_gateway = false`) allow spinning down heavy cloud compute when not actively executing live workload tests.
 
 ### 2.6. Immutability and Semantic Tagging
-Container images are immutable. Once built, tested, and scanned, the exact same container artifact is promoted through environments. Every image is tagged with both the unique Jenkins build number and the Git commit SHA.
+Container images are immutable. Once built, tested, and scanned, the exact same container artifact is promoted through environments. Every image is tagged with both the unique Jenkins build number and the Git commit SHA. The live cluster tag is recorded in `k8s/kustomization.yml` (`images.newTag`) so Git remains the source of truth.
 
-### 2.7. Decoupled Reliability and Self-Healing
+### 2.7. GitOps Continuous Delivery
+Jenkins does **not** run `kubectl apply` for the storefront. After pushing to ECR it commits the new image tag to Git; Argo CD reconciles `path: k8s` on `main` into `lumora-prod` with automated prune and self-heal (`argocd/application.yaml`). HPA-owned `/spec/replicas` is ignored so autoscaling is not reset.
+
+### 2.8. Decoupled Reliability and Self-Healing
 Kubernetes health monitoring decouples liveness from readiness:
 - The `/health` and `/health/live` endpoint verifies the responsiveness of the web process itself.
 - The `/health/ready` endpoint verifies backing database connectivity.
@@ -84,9 +88,13 @@ If MongoDB experiences transient latency, the pod is gracefully detached from tr
 
 The complete production cloud architecture, multi-AZ network layout, container workloads, and GitOps CI/CD flow are shown below:
 
-*Direct Artifact Reference: [`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`](../project_artifacts/Lumora_E-Commerce_Architecture_v3.png)*
+*Direct Artifact References:*
+- [`Lumora_E-Commerce_Architecture_v4.jpg`](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg) — end-to-end AWS DevOps & GitOps
+- [`Lumora_E-Commerce_GitOps_Platform_v4.jpg`](../project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg) — dual-AZ 3-tier EKS + Argo CD
 
-![Lumora E-Commerce DevOps Platform Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
+![Lumora E-Commerce End-to-End AWS DevOps & GitOps Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
+
+![Lumora E-Commerce GitOps Platform on Amazon EKS](../project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg)
 
 ### Visual Implementation Evidence
 
@@ -157,20 +165,26 @@ Stage 15: Terraform Apply
 Stage 16: Push Docker Image to AWS ECR
   └── Authenticates Docker to AWS ECR and pushes immutable tag (`build-${BUILD_NUMBER}-${GIT_COMMIT}`).
 
-Stage 17: Deploy to EKS & Setup Metrics Server (Conditional Guard)
-  └── If EKS is ACTIVE: boots Metrics Server, injects immutable tag, and applies manifests via Kustomize.
+Stage 17: Publish Image Tag for Argo CD
+  └── Updates `k8s/kustomization.yml` `newTag`, commits with `[skip ci]`, and pushes to `main` (Git = desired state).
 
-Stage 18: Post-Deployment Health Check
-  └── Executes live HTTP `/health` smoke test inside running container in EKS.
+Stage 18: Ensure Metrics Server
+  └── Idempotently ensures Metrics Server / Secrets Store CSI add-ons are present.
 
-Stage 19: Deploy and Verify Monitoring
+Stage 19: Verify Argo CD Rollout
+  └── Read-only poll until live Deployment image matches the published tag; smoke-tests `/health`.
+
+Stage 20: Post-Deployment Health Check
+  └── Executes live HTTP `/health` smoke test via in-cluster service DNS.
+
+Stage 21: Deploy and Verify Monitoring
   └── Verifies Prometheus Operator CRDs, applies ServiceMonitor & alerts, and confirms `/metrics` scraping target is UP.
 ```
 
 ### Visual CI/CD & Security Evidence
 
-#### 4. Jenkins 19-Stage Declarative Pipeline Run
-![Jenkins 19-Stage Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)
+#### 4. Jenkins Declarative Pipeline Run (CI + GitOps hand-off)
+![Jenkins Pipeline Success](../project_artifacts/screenshots/jenkins/02_pipeline_stage_view_success.png)
 
 #### 5. Infracost Shift-Left Financial Breakdown Report
 ![Infracost Cost Breakdown Report](../project_artifacts/screenshots/security_finops/01_infracost_report_jenkins.png)
@@ -188,7 +202,8 @@ For comprehensive technical specifications, implementation details, and role-spe
 
 | Component | Technical Deep-Dive Guide | Component Source & Directory README | Operational Scope & Coverage |
 | :--- | :--- | :--- | :--- |
-| **CI/CD Pipeline** | [Jenkins CI/CD Architecture Guide](./jenkins.md) | [Jenkins Declarative Pipeline](../Jenkinsfile) | 19-stage declarative pipeline, automated testing, container build, Trivy scan, rolling deploy |
+| **CI/CD Pipeline** | [Jenkins CI/CD Architecture Guide](./jenkins.md) | [Jenkins Declarative Pipeline](../Jenkinsfile) | CI pipeline: tests, Trivy, ECR push, GitOps tag commit, Argo CD verify |
+| **GitOps / CD** | [Argo CD Application](../argocd/application.yaml) | [Kubernetes Manifests README](../k8s/README.md) | Argo CD Application `lumora-prod`, auto-sync, prune, self-heal |
 | **Infrastructure as Code** | [Terraform Architecture & Networking Guide](./terraform.md) | [Terraform Module README](../terraform/README.md) | Multi-AZ VPC, subnets, NAT Gateways, ECR repository, EKS cluster, S3 remote state locking |
 | **Configuration Mgmt** | [Ansible Playbooks & Roles Guide](./ansible.md) | [Ansible Directory README](../ansible/README.md) | Idempotent controller setup, role-based architecture, strict host-key verification |
 | **Container Orchestration** | [Kubernetes Workloads & EKS Guide](./kubernetes.md) | [Kubernetes Manifests README](../k8s/README.md) | RollingUpdate deployments, ClusterIP service, ALB Ingress, HPA v2, MongoDB StatefulSet |

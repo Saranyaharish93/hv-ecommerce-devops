@@ -4,6 +4,10 @@ This directory contains the Helm values, Prometheus alerting rules, and Grafana 
 
 > **Deep-Dive Technical Guide**: For complete SRE Four Golden Signals specifications, Prometheus scraping architecture, alert definitions, and dashboard panels, see the [Monitoring & Observability Guide](../devops/monitoring.md) and [DevOps Platform Master Guide](../devops/README.md).
 
+![End-to-End Architecture (Observability column)](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
+
+Storefront CD is GitOps via Argo CD; this directory remains the home for Prometheus/Grafana values, dashboards, and `application-alerts.yaml` (ServiceMonitor stays in `monitoring` namespace, outside the `lumora-prod` Kustomize set).
+
 ---
 
 ## Directory Structure

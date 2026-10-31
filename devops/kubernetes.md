@@ -40,29 +40,34 @@ The application runs on a managed Amazon EKS cluster deployed across private sub
 
 The application tier is split into stateless and stateful tiers within the dedicated `lumora-prod` namespace:
 
-![Kubernetes Microservices Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
+![Kubernetes Microservices / GitOps Architecture](../project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg)
+
+![End-to-End DevOps & GitOps Architecture](../project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
+
+Desired state for `lumora-prod` is reconciled by **Argo CD** (Application `lumora-prod` in [`argocd/application.yaml`](../argocd/application.yaml)): GitHub `main` → path `k8s/` → cluster, with automated sync, prune, and self-heal. Jenkins only publishes the image tag; it does not `kubectl apply` the storefront.
 
 ---
 
 ## 3. Manifest Deep-Dive and Workload Proofs
 
-All manifests reside in the `k8s/` directory and are applied declaratively using Kustomize (`kubectl apply -k k8s/`):
+All manifests reside in the `k8s/` directory and are rendered with Kustomize. Argo CD applies them continuously; for local debugging you can still run `kubectl apply -k k8s/`:
 
 ```
 k8s/
 ├── 00-namespace.yml           # Defines isolated 'lumora-prod' namespace
-├── 01-configmap-secrets.yml   # Runtime config and SecretProviderClass pointer
-├── 02-mongodb.yml             # Headless Service + StatefulSet with 10Gi EBS PVC
+├── 01-configmap-secrets.yml   # ConfigMap, IRSA ServiceAccount lumora-app, SecretProviderClass
+├── 02-mongodb.yml             # Headless Service + StatefulSet with 10Gi EBS PVC (gp3)
 ├── 03-flask-deployment.yml     # Flask web deployment (RollingUpdate, non-root CSI mount)
 ├── 04-hpa.yml                 # HorizontalPodAutoscaler scaling on CPU & Memory
 ├── 05-service-ingress.yml     # Internal ClusterIP Service and AWS ALB Ingress
-└── kustomization.yml          # Kustomize manifest orchestrating all files
+└── kustomization.yml          # Orchestrates resources + images.newTag (GitOps pin)
 ```
 
 ### 3.1. Stateless Application Tier: `03-flask-deployment.yml`
 - **Rolling Updates**: `maxSurge: 1` and `maxUnavailable: 0` ensures zero-downtime rolling updates.
 - **Resource Allocations**: Requests `100m CPU / 128Mi RAM`; limits set at `500m CPU / 512Mi RAM`.
-- **Image Pull Policy**: Set to `Always` to pull freshly promoted images from Amazon ECR.
+- **Image Tag**: Set via Kustomize `images.newTag` (immutable ECR tags); `imagePullPolicy: IfNotPresent`.
+- **ServiceAccount**: `lumora-app` with IRSA annotation for Secrets Store CSI.
 - **Cost Center Tagging**: Labeled with `cost-center: Multicloud-Mavericks`.
 
 ### 3.2. Stateful Database Tier: `02-mongodb.yml`

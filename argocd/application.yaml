@@ -37,11 +37,9 @@ spec:
       jsonPointers:
         - /spec/replicas
   syncPolicy:
-    # Manual first sync in the UI. After Healthy/Synced, enable automation below.
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
-    # Uncomment after the first successful manual sync:
-    # automated:
-    #   prune: true
-    #   selfHeal: true

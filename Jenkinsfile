@@ -22,6 +22,14 @@ pipeline {
             steps {
                 echo 'Checking out source code from GitHub...'
                 checkout scm
+                script {
+                    // Image-tag commits for Argo CD must not re-trigger a full build loop.
+                    def commitMsg = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+                    if (commitMsg.contains('[skip ci]')) {
+                        currentBuild.result = 'ABORTED'
+                        error('Skipped: Argo CD image-tag commit ([skip ci]).')
+                    }
+                }
             }
         }
 
@@ -310,9 +318,75 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS & Setup Metrics Server') {
+        stage('Publish Image Tag for Argo CD') {
             when {
-                // Guard: Only run if the EKS cluster is actively provisioned on AWS
+                allOf {
+                    branch 'main'
+                    expression {
+                        return sh(
+                            script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                            returnStatus: true
+                        ) == 0
+                    }
+                }
+            }
+            steps {
+                echo "Recording immutable image tag ${env.IMAGE_TAG} in k8s/kustomization.yml for Argo CD..."
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-token',
+                    usernameVariable: 'GIT_USER',
+                    passwordVariable: 'GIT_TOKEN'
+                )]) {
+                    sh '''
+                        set -eu
+
+                        # Pin newTag in Kustomize (Argo CD syncs path k8s from main).
+                        python3 - <<'PY'
+import os
+import sys
+
+path = "k8s/kustomization.yml"
+tag = os.environ["IMAGE_TAG"]
+with open(path, encoding="utf-8") as fh:
+    lines = fh.readlines()
+
+updated = []
+found = False
+for line in lines:
+    if (not found) and line.lstrip().startswith("newTag:"):
+        indent = line[: len(line) - len(line.lstrip())]
+        updated.append(f'{indent}newTag: "{tag}"\n')
+        found = True
+    else:
+        updated.append(line)
+
+if not found:
+    sys.exit("FATAL: could not find images.newTag in k8s/kustomization.yml")
+
+with open(path, "w", encoding="utf-8", newline="\n") as fh:
+    fh.writelines(updated)
+print(f"Updated kustomization newTag -> {tag}")
+PY
+
+                        git config user.email "jenkins@lumora.local"
+                        git config user.name "lumora-jenkins"
+                        git add k8s/kustomization.yml
+
+                        if git diff --cached --quiet; then
+                            echo "Image tag already recorded in Git. Nothing to commit."
+                            exit 0
+                        fi
+
+                        git commit -m "deploy: flask image ${IMAGE_TAG} [skip ci]"
+                        git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/Saranyaharish93/hv-ecommerce-devops.git" HEAD:main
+                        echo "Published image tag commit for Argo CD sync."
+                    '''
+                }
+            }
+        }
+
+        stage('Ensure Metrics Server') {
+            when {
                 expression {
                     return sh(
                         script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
@@ -321,29 +395,55 @@ pipeline {
                 }
             }
             steps {
-                echo 'EKS Cluster is ACTIVE. Deploying Metrics Server and Workloads...'
+                echo 'Ensuring Metrics Server / Secrets Store CSI add-ons are present...'
                 sh '''
-                    # 1. Run automated Metrics Server check & installation
                     chmod +x scripts/setup_metrics_server.sh
                     ./scripts/setup_metrics_server.sh
+                '''
+            }
+        }
 
-                    # 2. Inject verified immutable build tag into deployment manifest prior to applying
-                    sed -i "s|image: .*/lumora-ecommerce-flask:.*|image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}|g" k8s/03-flask-deployment.yml
-
-                    # 3. Deploy application manifests, configmaps, and HPA via Kustomize with immutable tag directly
-                    kubectl apply -k k8s/
-
-
-
-
-                    # 4. Wait for Flask app rollout to complete
-                    kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
-
-                    # 5. Audit live deployed image identity
-                    DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
-                    echo "Verified running container image: ${DEPLOYED_IMAGE}"
+        stage('Verify Argo CD Rollout') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression {
+                        return sh(
+                            script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                            returnStatus: true
+                        ) == 0
+                    }
+                }
+            }
+            steps {
+                echo 'Waiting for Argo CD to sync the new image tag (read-only verification)...'
+                sh '''
+                    set -eu
 
                     EXPECTED_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+                    echo "Expected image after Argo CD sync: ${EXPECTED_IMAGE}"
+
+                    # Poll until the live Deployment matches the tag published to Git.
+                    ATTEMPTS=36
+                    SLEEP_SECS=10
+                    for i in $(seq 1 "${ATTEMPTS}"); do
+                        DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
+                        echo "[${i}/${ATTEMPTS}] Live image: ${DEPLOYED_IMAGE}"
+                        if [ "${DEPLOYED_IMAGE}" = "${EXPECTED_IMAGE}" ]; then
+                            echo "Argo CD image sync observed."
+                            break
+                        fi
+                        if [ "${i}" -eq "${ATTEMPTS}" ]; then
+                            echo "FATAL: Timed out waiting for Argo CD to deploy ${EXPECTED_IMAGE}"
+                            echo "Last observed image: ${DEPLOYED_IMAGE}"
+                            exit 1
+                        fi
+                        sleep "${SLEEP_SECS}"
+                    done
+
+                    kubectl rollout status deployment/flask-app -n lumora-prod --timeout=180s
+
+                    DEPLOYED_IMAGE=$(kubectl get deployment flask-app -n lumora-prod -o jsonpath='{.spec.template.spec.containers[0].image}')
                     if [ "${DEPLOYED_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
                         echo "FATAL: Deployed image does not match expected build image."
                         echo "Expected: ${EXPECTED_IMAGE}"
@@ -352,40 +452,37 @@ pipeline {
                     fi
                     echo "Image identity verification PASSED."
 
-                    # 6. HTTP Health Smoke Test: Confirm application is responding on /health
                     echo "Executing live HTTP health smoke test..."
                     kubectl exec -n lumora-prod deployment/flask-app -c flask-app -- python -c "import urllib.request; res = urllib.request.urlopen('http://localhost:5000/health'); assert res.getcode() == 200; print('Live Health Check: OK (HTTP 200)')"
 
-                    # 7. Display live HPA status
                     kubectl get hpa -n lumora-prod
-                        '''
+                '''
                 script {
                     env.DEPLOYMENT_STATUS = 'DEPLOYED'
                 }
             }
         }
 
-        
-stage('Post-Deployment Health Check') {
-    when {
-        expression {
-            return sh(
-                script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
-                returnStatus: true
-            ) == 0
-        }
-    }
-    steps {
-        sh '''
-            set -eu
+        stage('Post-Deployment Health Check') {
+            when {
+                expression {
+                    return sh(
+                        script: 'aws eks describe-cluster --name lumora-ecommerce-prod --region us-east-1 --query "cluster.status" --output text 2>/dev/null | grep -q "ACTIVE"',
+                        returnStatus: true
+                    ) == 0
+                }
+            }
+            steps {
+                sh '''
+                    set -eu
 
-            echo "Checking Flask application health in EKS..."
+                    echo "Checking Flask application health in EKS..."
 
-            kubectl rollout status deployment/flask-app \
-              -n lumora-prod --timeout=180s
+                    kubectl rollout status deployment/flask-app \
+                      -n lumora-prod --timeout=180s
 
-            kubectl exec deployment/flask-app \
-              -n lumora-prod -- python -c '
+                    kubectl exec deployment/flask-app \
+                      -n lumora-prod -- python -c '
 import urllib.request
 url = "http://flask-service.lumora-prod.svc.cluster.local/health"
 with urllib.request.urlopen(url, timeout=15) as response:
@@ -394,8 +491,8 @@ with urllib.request.urlopen(url, timeout=15) as response:
     assert response.status == 200, "Health check failed"
 '
 
-            echo "Application health verification PASSED."
-                        '''
+                    echo "Application health verification PASSED."
+                '''
             }
         }
 

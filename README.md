@@ -2,12 +2,13 @@
 
 [![Production Storefront](https://img.shields.io/badge/Live%20Storefront-lumora.thiagarajanb.dpdns.org-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://lumora.thiagarajanb.dpdns.org/)
 [![AWS EKS](https://img.shields.io/badge/Kubernetes-AWS%20EKS%20v1.36-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](devops/kubernetes.md)
-[![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%2019--Stage-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
+[![Jenkins CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins%20GitOps-D24939?style=flat-square&logo=jenkins&logoColor=white)](devops/jenkins.md)
+[![Argo CD](https://img.shields.io/badge/CD-Argo%20CD%20GitOps-EF7B4D?style=flat-square&logo=argo&logoColor=white)](argocd/application.yaml)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform%20v1.8+-7B42BC?style=flat-square&logo=terraform&logoColor=white)](devops/terraform.md)
 [![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)](devops/ansible.md)
 [![Status](https://img.shields.io/badge/Capstone%20Status-100%25%20Completed-brightgreen?style=flat-square)](devops/README.md)
 
-Lumora is a full-stack e-commerce web application built with Python, Flask, and MongoDB. The repository combines a working storefront with the DevOps assets required for an end-to-end capstone project covering CI/CD, cloud infrastructure automation, Docker, Jenkins, Terraform, Ansible, Kubernetes, and observability.
+Lumora is a full-stack e-commerce web application built with Python, Flask, and MongoDB. The repository combines a working storefront with the DevOps assets required for an end-to-end capstone project covering CI/CD, GitOps (Jenkins + Argo CD), cloud infrastructure automation, Docker, Terraform, Ansible, Kubernetes, and observability.
 
 This project is designed to demonstrate a realistic engineering lifecycle: build a functional online store, containerize the application, automate validation and security checks, provision cloud infrastructure, and deploy to a Kubernetes-based environment.
 
@@ -19,16 +20,22 @@ This project is designed to demonstrate a realistic engineering lifecycle: build
 
 ## Project Overview
 
-*Direct Artifact Reference: [`project_artifacts/Lumora_E-Commerce_Architecture_v3.png`](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)*
+*Direct Artifact References:*
+- [`project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg`](project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg) — end-to-end AWS DevOps & GitOps
+- [`project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg`](project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg) — dual-AZ 3-tier EKS + Argo CD platform
 
-![Lumora E-Commerce DevOps Platform Architecture](project_artifacts/Lumora_E-Commerce_Architecture_v3.png)
+![Lumora E-Commerce End-to-End AWS DevOps & GitOps Architecture](project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg)
+
+![Lumora E-Commerce GitOps Platform on Amazon EKS](project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg)
+
 Lumora is a demo electronics storefront with customer browsing, product discovery, cart and checkout flow, order tracking, newsletter-like contact interactions, and administrative reporting. The repository supports both application development and DevOps execution, making it suitable for showcasing a complete software delivery pipeline.
 
 The project includes:
 - a Flask application backed by MongoDB
 - local Docker and Docker Compose orchestration
 - automated application tests
-- Jenkins pipeline automation
+- Jenkins CI (build, scan, push) with GitOps image-tag commits
+- Argo CD continuous delivery on Amazon EKS (`argocd/`, path `k8s/`)
 - Terraform infrastructure provisioning
 - Ansible configuration management
 - Kubernetes manifests for deployment
@@ -45,17 +52,17 @@ The project includes:
 #### 2. Automation, CI & Security (Jenkins on AWS EC2)
 - **Controller Host**: Jenkins runs on an AWS EC2 instance in a dedicated management security group, fully configured and hardened using **Ansible playbooks** (automating Docker Engine, `kubectl`, AWS CLI, and security tools).
 - **Declarative Pipeline Stages**:
-  1. `Checkout`: Pulls the latest code repository from GitHub.
+  1. `Checkout`: Pulls the latest code repository from GitHub (aborts `[skip ci]` image-tag commits).
   2. `Pytest`: Runs automated unit and functional test suites under `tests/`.
   3. `Trivy Scan`: Scans application files and container dependencies for security vulnerabilities.
   4. `Docker BuildKit`: Builds optimized, secure container images with non-root user (`appuser`).
   5. `Push Image`: Tags images with build numbers and pushes to **Amazon ECR**.
   6. `Terraform Plan/Apply`: Provisions and manages AWS VPC, subnets, and EKS resources with remote state locking.
-  7. `Ansible`: Manages host configurations idempotently.
-  8. `Deploy to EKS`: Applies rolling updates to Kubernetes workloads using `kubectl`.
+  7. `Publish Image Tag for Argo CD`: Commits the immutable tag to `k8s/kustomization.yml` on `main` (`[skip ci]`).
+  8. `Verify Argo CD Rollout`: Read-only wait for Argo CD to sync the new image and pass `/health`.
 
 #### 3. Artifacts & IaC State Management
-- **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-flask`).
+- **Amazon ECR**: Serves as the private container registry for immutable, semantically tagged application images (`lumora-ecommerce-flask`).
 - **Amazon S3 Native State Locking (`use_lockfile = true`)**: Provides secure AES-256 encrypted remote state storage with atomic conditional-write concurrency locking in S3 (eliminating auxiliary DynamoDB table overhead and cost).
 
 #### 4. AWS Production Network (VPC `10.0.0.0/16`)
@@ -65,19 +72,21 @@ The project includes:
   - **Dual-AZ NAT Gateways** providing secure outbound internet access for private workloads.
   - **AWS Application Load Balancer (ALB)** handling TLS/HTTPS termination on port `443`.
   - **Jenkins EC2 / Bastion Host**.
-- **Private Subnets (`10.0.11.0/24`, `10.0.12.0/24`)**:
+- **Private Compute Subnets (`10.0.48.0/20`, `10.0.64.0/20`)**:
   - Isolated from direct public internet exposure.
-  - Hosts **EKS Managed Node Groups** and all application/database pods.
+  - Hosts **EKS Managed Node Groups**, Argo CD (`argocd` namespace), and application pods.
 
-#### 5. Kubernetes Workloads (Amazon EKS — Namespace `lumora-prod`)
+#### 5. Kubernetes Workloads & GitOps (Amazon EKS)
+- **Argo CD** (`argocd` namespace): Watches GitHub `main` path `k8s/`, auto-syncs with prune + self-heal into `lumora-prod` (Application `lumora-prod` in `argocd/application.yaml`).
 - **ALB Ingress Controller**: Routes incoming external traffic to the internal `flask-service` (targetPort: `5000`).
 - **Flask Application Deployment**:
   - Multi-replica Python 3.12 Flask app running behind **Gunicorn**.
+  - ServiceAccount `lumora-app` with IRSA for AWS Secrets Store CSI.
   - Configured with `readinessProbe` and `livenessProbe` monitoring `/health`.
   - Scaled dynamically (2 to 5 replicas) using the **Horizontal Pod Autoscaler (HPA v2)** based on CPU (70%) and memory (80%) utilization.
-  - Environment configuration managed via Kubernetes `ConfigMap` and secrets via `Kubernetes Secrets` / `AWS Secrets Store CSI`.
+  - Image tag pinned via Kustomize `images.newTag` (source of truth in Git).
 - **Database Workload (MongoDB 7.0)**:
-  - Deployed as a dedicated `MongoDB StatefulSet` (`mongodb-0`) in the private subnet.
+  - Deployed as a dedicated `MongoDB StatefulSet` (`mongodb-0`) with `storageClassName: gp3`.
   - Internal communication via `mongodb-service` (ClusterIP: None) — completely isolated from public access.
   - Data persistence guaranteed using **PersistentVolumeClaim (PVC)** bound to high-performance **Amazon EBS `gp3` volumes** via the **AWS EBS CSI Driver**.
 
@@ -99,10 +108,11 @@ It demonstrates how the following work together in practice:
 - Application development with Flask
 - Data storage with MongoDB
 - Containerization with Docker
-- CI/CD with Jenkins
+- Continuous Integration with Jenkins
+- Continuous Delivery / GitOps with Argo CD
 - Provisioning with Terraform
 - Automation with Ansible
-- Deployment with Kubernetes
+- Orchestration with Kubernetes on Amazon EKS
 - Monitoring with Prometheus and Grafana
 
 ---
@@ -247,17 +257,19 @@ The repository reflects a layered DevOps architecture for a web application that
 A simplified view is:
 
 ```text
-Browser
-  → Flask application container
-  → MongoDB database
-  → Jenkins / Terraform / Ansible automation pipeline
-  → AWS infrastructure and Kubernetes deployment assets
+Developer → GitHub (main)
+  → Jenkins CI (test / scan / build / push ECR)
+  → GitOps commit (k8s/kustomization.yml image tag)
+  → Argo CD (auto-sync + self-heal)
+  → Amazon EKS (lumora-prod)
+  → ALB → Flask → MongoDB
 ```
 
 Key infrastructure and delivery assets include:
 - `Dockerfile`
 - `docker-compose.yml`
 - `Jenkinsfile`
+- `argocd/application.yaml`
 - `terraform/`
 - `ansible/`
 - `k8s/`
@@ -265,7 +277,8 @@ Key infrastructure and delivery assets include:
 - `project_artifacts/`
 
 Architecture references and sprint documentation are included in:
-- `project_artifacts/Lumora_E-Commerce_Architecture_v3.png`
+- `project_artifacts/Lumora_E-Commerce_Architecture_v4.jpg`
+- `project_artifacts/Lumora_E-Commerce_GitOps_Platform_v4.jpg`
 - `project_artifacts/Capstone_Task_Execution_Roadmap.md`
 - `project_artifacts/Project_Sprints.txt`
 
@@ -286,6 +299,8 @@ hv-ecommerce-devops/
 │   ├── inventory/
 │   ├── playbooks/
 │   └── roles/
+├── argocd/
+│   └── application.yaml       # Argo CD AppProject + Application (auto-sync)
 ├── k8s/
 │   ├── 00-namespace.yml
 │   ├── 01-configmap-secrets.yml
@@ -293,7 +308,8 @@ hv-ecommerce-devops/
 │   ├── 03-flask-deployment.yml
 │   ├── 04-hpa.yml
 │   ├── 05-service-ingress.yml
-│   └── kustomization.yml
+│   ├── 06-flask-servicemonitor.yml
+│   └── kustomization.yml      # images.newTag pinned for GitOps
 ├── monitoring/
 │   ├── application-alerts.yaml
 │   ├── grafana-application-dashboard.json
@@ -301,13 +317,13 @@ hv-ecommerce-devops/
 │   ├── grafana-values.yaml
 │   └── prometheus-values.yaml
 ├── project_artifacts/
-│   ├── Lumora_E-Commerce_Architecture_v3.png
+│   ├── Lumora_E-Commerce_Architecture_v4.jpg
+│   ├── Lumora_E-Commerce_GitOps_Platform_v4.jpg
 │   ├── Capstone_Task_Execution_Roadmap.md
 │   ├── DevOps_Capstone_Viva_Preparation_Guide.md
 │   ├── DevOps_Screenshot_Tracking_Matrix.md
 │   ├── Kubernetes_Quick_Reference_CheatSheet.md
 │   ├── Implementation_Plan_Sprint2_Jenkins_Automation.md
-│   ├── Jenkinsfile
 │   ├── Project_Sprints.txt
 │   ├── Project4_ProblemStatement.txt
 │   └── screenshots/
